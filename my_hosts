@@ -1,0 +1,4 @@
+[web]
+172.10.10.1 ansible_ssh_user=root
+172.10.10.2 ansible_ssh_user=root
+
