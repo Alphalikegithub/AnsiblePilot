@@ -11,7 +11,8 @@
 - **Ping 测试**：调用 `ansible -m ping` 检查目标主机连通性。
 - **批量执行命令**：通过 `shell`、`command`、`service`、`systemd` 等模块批量执行命令。
 - **批量上传**：通过 Ansible `copy` 模块把本地文件或目录上传到远端服务器。
-- **执行日志展示**：实时显示 Ansible 标准输出和错误输出。
+- **外部终端执行**：通过系统默认终端运行 Ansible，避免 GUI 进程环境限制影响 Ansible。
+- **执行日志同步**：外部终端执行时，同步显示 Ansible 标准输出、错误输出和退出码。
 - **命令预览**：执行前展示即将执行的命令。
 
 ## 2. 编译方式
@@ -57,7 +58,34 @@ ansible --version
 ansible-playbook --version
 ```
 
-### 3.2 准备 SSH 访问
+### 3.2 准备系统终端
+
+程序执行 Ansible 时会优先使用系统默认终端。
+
+建议确认默认终端可用：
+
+```bash
+x-terminal-emulator --version
+```
+
+也可以查看系统默认终端：
+
+```bash
+update-alternatives --list x-terminal-emulator
+```
+
+程序会依次尝试：
+
+```text
+x-terminal-emulator
+mate-terminal
+gnome-terminal
+konsole
+xfce4-terminal
+xterm
+```
+
+### 3.3 准备 SSH 访问
 
 Ansible 批量操作依赖 SSH 登录远端服务器。
 
@@ -116,6 +144,14 @@ my_hosts
 ```
 
 程序会自动扫描，也可以手动点击 `选择 Inventory`。
+
+如果系统存在：
+
+```text
+/etc/ansible/hosts
+```
+
+程序启动时会优先加入并默认选择这个 Inventory。工作目录中的 `hosts`、`my_hosts`、`*.ini` 也会同时加入下拉框。
 
 #### 主机组
 
@@ -205,7 +241,8 @@ web
 4. 在 Playbook 下拉框中选择要执行的 YAML 文件。
 5. 检查下方 `命令预览`。
 6. 点击 `执行选中 Playbook`。
-7. 在日志区域查看执行结果。
+7. 程序会打开外部终端执行任务。
+8. 在日志区域查看同步输出和退出码。
 
 常见 playbook：
 
@@ -333,11 +370,19 @@ ansible -i hosts web -m copy -a "src=本地路径 dest=/root/work/missionschedul
 
 ### 8.1 查看日志
 
-下方日志区域会实时显示：
+任务执行时会打开外部终端，同时 GUI 下方日志区域会同步显示：
 
 - Ansible 标准输出
 - Ansible 错误输出
 - 任务退出码
+
+外部终端脚本和同步文件默认位于系统临时目录，例如：
+
+```text
+/tmp/ansible-pilot-run.sh
+/tmp/ansible-pilot-output.log
+/tmp/ansible-pilot-status.txt
+```
 
 退出码一般含义：
 
@@ -346,13 +391,15 @@ ansible -i hosts web -m copy -a "src=本地路径 dest=/root/work/missionschedul
 
 ### 8.2 停止任务
 
-如果任务执行时间过长或命令写错，可以点击：
+当前 Ansible 任务在外部终端中执行。如果任务执行时间过长或命令写错，请在外部终端中按 `Ctrl+C` 停止。
+
+界面中的：
 
 ```text
 停止当前任务
 ```
 
-程序会终止当前 Ansible 进程。
+只用于停止 GUI 内部直接启动的进程；外部终端任务需要在终端窗口中停止。
 
 ## 9. 常见问题
 
@@ -361,6 +408,14 @@ ansible -i hosts web -m copy -a "src=本地路径 dest=/root/work/missionschedul
 原因：系统 PATH 中没有 `ansible`。
 
 解决：请在当前 Linux 系统安装 Ansible，并确保 `ansible`、`ansible-playbook` 在 `PATH` 中。
+
+如果外部终端中提示找不到命令，请检查终端环境：
+
+```bash
+echo $PATH
+which ansible
+which ansible-playbook
+```
 
 ### 9.2 SSH 登录失败
 
@@ -405,6 +460,29 @@ stderr
 - 本地路径是否存在。
 - 远端目标目录是否存在。
 - 远端用户是否有写权限。
+
+### 9.6 提示 /dev/shm 或 multiprocessing 权限错误
+
+如果日志中出现：
+
+```text
+ERROR! Unable to use multiprocessing, this is normally caused by lack of access to /dev/shm
+```
+
+说明 Ansible 或 Python multiprocessing 无法创建共享内存或 semaphore。
+
+程序已经默认使用外部终端执行，以减少 GUI 进程环境限制。如果仍然失败，请在外部终端中检查：
+
+```bash
+ls -ld /dev/shm
+python3 -c "import multiprocessing as mp; q=mp.Queue(); q.put('ok'); print(q.get())"
+```
+
+正常情况下 Python 命令应输出：
+
+```text
+ok
+```
 
 ## 10. 推荐使用流程
 

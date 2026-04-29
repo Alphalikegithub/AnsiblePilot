@@ -13,6 +13,7 @@
 #include <QLabel>
 #include <QList>
 #include <QLineEdit>
+#include <QPair>
 #include <QPlainTextEdit>
 #include <QProcessEnvironment>
 #include <QPushButton>
@@ -21,6 +22,7 @@
 #include <QSplitter>
 #include <QTabWidget>
 #include <QTextCursor>
+#include <QTimer>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -31,6 +33,10 @@ static QString cleanPath(const QString &path)
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), process(new QProcess(this))
 {
+    externalLogTimer = new QTimer(this);
+    externalLogTimer->setInterval(500);
+    connect(externalLogTimer, &QTimer::timeout, this, &MainWindow::pollExternalTerminalOutput);
+
     buildUi();
     scanFiles();
     updatePreview();
@@ -372,6 +378,10 @@ void MainWindow::runProcess(const QString &program, const QStringList &arguments
 
 void MainWindow::runInExternalTerminal(const QString &program, const QStringList &arguments, const QString &workingDirectory)
 {
+    if (externalLogTimer->isActive()) {
+        externalLogTimer->stop();
+    }
+
     QStringList realArguments = arguments;
     if (!realArguments.contains(QStringLiteral("--forks")) && !realArguments.contains(QStringLiteral("-f"))) {
         realArguments << QStringLiteral("--forks") << QStringLiteral("1");
@@ -386,7 +396,12 @@ void MainWindow::runInExternalTerminal(const QString &program, const QStringList
     const QString tempRoot = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
     const QString scriptPath = QDir(tempRoot).absoluteFilePath(QStringLiteral("ansible-pilot-run.sh"));
     const QString ansibleTemp = QDir(tempRoot).absoluteFilePath(QStringLiteral("ansible-pilot"));
+    externalLogPath = QDir(tempRoot).absoluteFilePath(QStringLiteral("ansible-pilot-output.log"));
+    externalStatusPath = QDir(tempRoot).absoluteFilePath(QStringLiteral("ansible-pilot-status.txt"));
+    externalLogOffset = 0;
     QDir().mkpath(ansibleTemp);
+    QFile::remove(externalLogPath);
+    QFile::remove(externalStatusPath);
 
     QFile script(scriptPath);
     if (!script.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
@@ -397,6 +412,11 @@ void MainWindow::runInExternalTerminal(const QString &program, const QStringList
     const QString scriptContent = QStringLiteral(
         "#!/bin/bash\n"
         "set -o pipefail\n"
+        "LOG_FILE=%5\n"
+        "STATUS_FILE=%6\n"
+        ": > \"${LOG_FILE}\"\n"
+        "rm -f \"${STATUS_FILE}\"\n"
+        "exec > >(tee -a \"${LOG_FILE}\") 2>&1\n"
         "cd %1 || exit 1\n"
         "export TMPDIR=%2\n"
         "export ANSIBLE_LOCAL_TEMP=%3\n"
@@ -415,6 +435,7 @@ void MainWindow::runInExternalTerminal(const QString &program, const QStringList
         "if [ ${PY_STATUS} -ne 0 ]; then\n"
         "    echo 'Python multiprocessing 自检失败，停止执行 Ansible。'\n"
         "    echo '按回车关闭终端...'\n"
+        "    echo ${PY_STATUS} > \"${STATUS_FILE}\"\n"
         "    read\n"
         "    exit ${PY_STATUS}\n"
         "fi\n"
@@ -425,12 +446,15 @@ void MainWindow::runInExternalTerminal(const QString &program, const QStringList
         "echo\n"
         "echo \"任务结束，退出码：${STATUS}\"\n"
         "echo '按回车关闭终端...'\n"
+        "echo ${STATUS} > \"${STATUS_FILE}\"\n"
         "read\n"
         "exit ${STATUS}\n")
         .arg(shellQuote(workingDirectory),
              shellQuote(tempRoot),
              shellQuote(ansibleTemp),
-             command);
+             command,
+             shellQuote(externalLogPath),
+             shellQuote(externalStatusPath));
 
     script.write(scriptContent.toLocal8Bit());
     script.close();
@@ -442,6 +466,8 @@ void MainWindow::runInExternalTerminal(const QString &program, const QStringList
                   .arg(QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd HH:mm:ss")),
                        command));
     appendLog(QStringLiteral("终端脚本：%1\n").arg(scriptPath));
+    appendLog(QStringLiteral("同步日志：%1\n").arg(externalLogPath));
+    appendLog(QStringLiteral("状态文件：%1\n").arg(externalStatusPath));
 
     const QList<QPair<QString, QStringList>> terminals{
         {QStringLiteral("x-terminal-emulator"), {QStringLiteral("-e"), QStringLiteral("bash"), scriptPath}},
@@ -455,6 +481,7 @@ void MainWindow::runInExternalTerminal(const QString &program, const QStringList
     for (const auto &terminal : terminals) {
         if (QProcess::startDetached(terminal.first, terminal.second)) {
             appendLog(QStringLiteral("已打开外部终端：%1\n").arg(terminal.first));
+            externalLogTimer->start();
             return;
         }
     }
@@ -462,6 +489,7 @@ void MainWindow::runInExternalTerminal(const QString &program, const QStringList
     appendLog(QStringLiteral(
         "无法自动打开外部终端。请手动在普通终端执行：\n"
         "bash %1\n").arg(shellQuote(scriptPath)));
+    externalLogTimer->start();
 }
 
 bool MainWindow::ensureSharedMemoryAvailable()
@@ -515,6 +543,36 @@ bool MainWindow::ensureSharedMemoryAvailable()
     }
 
     return true;
+}
+
+void MainWindow::pollExternalTerminalOutput()
+{
+    if (!externalLogPath.isEmpty()) {
+        QFile logFile(externalLogPath);
+        if (logFile.open(QIODevice::ReadOnly)) {
+            if (externalLogOffset > logFile.size()) {
+                externalLogOffset = 0;
+            }
+
+            if (logFile.seek(externalLogOffset)) {
+                const QByteArray data = logFile.readAll();
+                externalLogOffset = logFile.pos();
+                if (!data.isEmpty()) {
+                    appendLog(QString::fromLocal8Bit(data));
+                }
+            }
+        }
+    }
+
+    if (!externalStatusPath.isEmpty() && QFileInfo::exists(externalStatusPath)) {
+        QFile statusFile(externalStatusPath);
+        if (statusFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            const QString status = QString::fromLocal8Bit(statusFile.readAll()).trimmed();
+            externalLogTimer->stop();
+            appendLog(QStringLiteral("\n外部终端任务结束，退出码：%1\n").arg(status.isEmpty() ? QStringLiteral("未知") : status));
+            externalStatusPath.clear();
+        }
+    }
 }
 
 void MainWindow::appendLog(const QString &message)

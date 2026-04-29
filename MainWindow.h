@@ -8,6 +8,7 @@ class QComboBox;
 class QLineEdit;
 class QPushButton;
 class QPlainTextEdit;
+class QTimer;
 
 class MainWindow : public QMainWindow
 {
@@ -23,6 +24,7 @@ private:
     void runInExternalTerminal(const QString &program, const QStringList &arguments, const QString &workingDirectory);
     void appendLog(const QString &message);
     void updatePreview();
+    void pollExternalTerminalOutput();
     bool ensureSharedMemoryAvailable();
     QString shellQuote(const QString &text) const;
     QString workspace() const;
@@ -45,4 +47,8 @@ private:
     QPlainTextEdit *logEdit = nullptr;
     QPushButton *stopButton = nullptr;
     QProcess *process = nullptr;
+    QTimer *externalLogTimer = nullptr;
+    QString externalLogPath;
+    QString externalStatusPath;
+    qint64 externalLogOffset = 0;
 };
