@@ -1,0 +1,13 @@
+- name: 批量服务器日常管理与部署
+  hosts: all
+  become: yes
+  tasks:
+  
+    - name: 上传 调度代理 
+      ansible.builtin.copy:
+        src: /home/user/common/给服务器部署调度代理/ansible/0318十台服务器部署/bin
+        dest: /root/work/missionschedulingsoftware/
+        remote_src: no
+
+
+  

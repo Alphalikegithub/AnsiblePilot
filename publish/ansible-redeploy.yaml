@@ -1,0 +1,45 @@
+- name: 重新部署 serveragent（停止 -> 删除 pid -> 启动）
+  hosts: all
+  become: yes
+  tasks:
+    - name: 查找 serveragent 进程（不改变主机状态）
+      shell: pgrep -f serveragent
+      register: serveragent_ps
+      changed_when: false
+      failed_when: false
+
+    - name: 终止 serveragent 进程（仅在存在时）
+      command:
+        argv: ['pkill','-f','serveragent']
+      when: serveragent_ps.rc == 0
+      ignore_errors: yes
+
+    - name: 删除 serveragent.pid 文件
+      file:
+        path: /root/work/missionschedulingsoftware/config/serveragent.pid
+        state: absent
+
+    - name: 检查 start_agent.sh 是否存在
+      stat:
+        path: /root/work/missionschedulingsoftware/start_agent.sh
+      register: start_sh
+
+    - name: 若存在则确保 start_agent.sh 可执行
+      file:
+        path: /root/work/missionschedulingsoftware/start_agent.sh
+        mode: '0755'
+      when: start_sh.stat.exists
+
+    - name: 执行 start_agent.sh 启动脚本
+      shell: ./start_agent.sh
+      args:
+        chdir: /root/work/missionschedulingsoftware
+      register: start_result
+      failed_when: start_result.rc != 0
+
+    - name: 打印启动脚本输出
+      debug:
+        msg:
+          - "rc = {{ start_result.rc }}"
+          - "stdout = {{ start_result.stdout | default('') }}"
+          - "stderr = {{ start_result.stderr | default('') }}"
