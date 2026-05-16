@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QList>
 #include <QMainWindow>
 #include <QProcess>
 #include <QStringList>
@@ -8,6 +9,7 @@ class QComboBox;
 class QLineEdit;
 class QPushButton;
 class QPlainTextEdit;
+class QTableWidget;
 class QTimer;
 
 class MainWindow : public QMainWindow
@@ -25,6 +27,8 @@ private:
     void appendLog(const QString &message);
     void updatePreview();
     void pollExternalTerminalOutput();
+    int recordHistoryStart(const QString &command);
+    void recordHistoryFinish(int row, const QString &status, const QString &exitCode);
     bool ensureSharedMemoryAvailable();
     QString shellQuote(const QString &text) const;
     QString workspace() const;
@@ -48,7 +52,13 @@ private:
     QPushButton *stopButton = nullptr;
     QProcess *process = nullptr;
     QTimer *externalLogTimer = nullptr;
-    QString externalLogPath;
-    QString externalStatusPath;
-    qint64 externalLogOffset = 0;
+    struct ExternalRun {
+        QString logPath;
+        QString statusPath;
+        QString pidPath;
+        qint64 logOffset = 0;
+        int historyRow = -1;
+    };
+    QList<ExternalRun> activeRuns;
+    QTableWidget *historyTable = nullptr;
 };
