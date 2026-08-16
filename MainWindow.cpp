@@ -537,7 +537,7 @@ void MainWindow::buildUi()
     historyTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
     historyTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
     historyTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
-    historyTable->setMinimumHeight(120);
+    historyTable->setMinimumHeight(80);
     auto *historyContainer = new QWidget(output);
     auto *historyLayout = new QVBoxLayout(historyContainer);
     historyLayout->setContentsMargins(0, 0, 0, 0);
@@ -582,9 +582,9 @@ void MainWindow::buildUi()
     auto *outputSplitter = new QSplitter(Qt::Vertical, output);
     outputSplitter->addWidget(topTabs);
     outputSplitter->addWidget(logEdit);
-    outputSplitter->setStretchFactor(0, 1);
-    outputSplitter->setStretchFactor(1, 4);
-    outputSplitter->setSizes({160, 640});
+    outputSplitter->setStretchFactor(0, 0);
+    outputSplitter->setStretchFactor(1, 1);
+    outputSplitter->setSizes({120, 800});
     outputLayout->addWidget(outputSplitter, 1);
     outputLayout->addWidget(stopButton);
 

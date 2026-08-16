@@ -14,7 +14,9 @@
 - **常用操作**：服务管理、系统信息、进程与日志、文件操作、软件包等可视化按钮，无需手写 playbook。
 - **外部终端执行**：通过系统默认终端运行 Ansible，避免 GUI 进程环境限制影响 Ansible。
 - **执行日志同步**：外部终端执行时，同步显示 Ansible 标准输出、错误输出和退出码。
-- **多进程残留清理**：每次执行前自动检查 `/dev/shm` 中 Python multiprocessing 残留信号量并清理，避免重复执行后 `Errno 13` 报错。
+- **并发执行**：每次点击执行都会启动一个独立的外部终端，使用各自独立的脚本/日志/状态/PID 文件，互不干扰；GUI 同时监控多个任务的状态。
+- **运行历史**：日志区上方的 `运行历史` Tab 会按时间记录每次执行的命令、退出码和成功/失败状态，可双击行复制命令到剪贴板。
+- **停止任务**：`停止当前任务` 按钮会读取每个正在运行任务的 PID，向其进程组发送 `TERM`/`KILL` 信号，连同终端中的 ansible 子进程一起结束。
 - **命令预览**：执行前展示即将执行的命令。
 
 ## 2. 编译方式
@@ -435,12 +437,13 @@ ansible -i hosts web -m copy -a "src=本地路径 dest=/root/work/missionschedul
 - Ansible 错误输出
 - 任务退出码
 
-外部终端脚本和同步文件默认位于系统临时目录，例如：
+每次执行都会在系统临时目录下生成一组独立的辅助文件，文件名以 `时间戳-PID-序号` 区分，避免并发任务互相覆盖，例如：
 
 ```text
-/tmp/ansible-pilot-run.sh
-/tmp/ansible-pilot-output.log
-/tmp/ansible-pilot-status.txt
+/tmp/ansible-pilot-run-1778946713184-11986-0.sh        # 终端脚本
+/tmp/ansible-pilot-output-1778946713184-11986-0.log    # 同步日志
+/tmp/ansible-pilot-status-1778946713184-11986-0.txt    # 退出码状态文件
+/tmp/ansible-pilot-pid-1778946713184-11986-0.txt       # 终端脚本 PID（停止任务时使用）
 ```
 
 退出码一般含义：
@@ -448,17 +451,25 @@ ansible -i hosts web -m copy -a "src=本地路径 dest=/root/work/missionschedul
 - `0`：成功
 - 非 `0`：失败或部分失败
 
-### 9.2 停止任务
+### 9.2 运行历史
 
-当前 Ansible 任务在外部终端中执行。如果任务执行时间过长或命令写错，请在外部终端中按 `Ctrl+C` 停止。
+日志区上方有 `命令预览` / `运行历史` 两个 Tab。运行历史中每一行对应一次外部终端执行：
 
-界面中的：
+- 时间：任务开始时间。
+- 命令：完整的 ansible 命令字符串。
+- 退出码：任务结束后写入。
+- 状态：`运行中` / `成功` / `失败` / `未知`。
 
-```text
-停止当前任务
-```
+操作：
 
-只用于停止 GUI 内部直接启动的进程；外部终端任务需要在终端窗口中停止。
+- 双击行将命令复制到剪贴板。
+- `复制选中命令`、`清空历史` 按钮位于表格下方。
+
+### 9.3 停止任务
+
+点击 `停止当前任务` 按钮，程序会读取所有正在运行任务对应的 PID 文件，依次向各自进程组发送 `SIGTERM`，1 秒后再发 `SIGKILL` 兜底，把外部终端里的脚本及其下的 ansible 子进程一起终止。运行历史中对应的行会被标记为失败。
+
+如果你只想停止某一个终端，也可以直接在该终端窗口里按 `Ctrl+C`。
 
 ## 10. 常见问题
 
@@ -528,19 +539,9 @@ stderr
 ERROR! Unable to use multiprocessing, this is normally caused by lack of access to /dev/shm
 ```
 
-说明 Ansible 或 Python multiprocessing 无法创建共享内存或 semaphore。
+说明 Ansible 依赖的 Python multiprocessing 无法创建共享内存或 semaphore。常见原因是 `/dev/shm` 中堆积了 `sem.mp-*`、`mp-*` 残留信号量，累计到一定数量后新进程创建 `SemLock` 会被拒绝。
 
-**最常见原因：`/dev/shm` 中堆积了 `sem.mp-*` 残留信号量**。每次 Ansible 异常退出或被关闭终端时，可能留下 `sem.mp-*`、`mp-*` 文件，累计到一定数量后新进程创建 `SemLock` 会被拒绝。
-
-程序在每次执行 Ansible 前会自动：
-
-1. 统计 `/dev/shm` 文件数和 `sem.mp-*`、`mp-*` 残留数量。
-2. 删除当前用户名下的残留对象。
-3. 重新尝试 Python multiprocessing 自检。
-4. 任务结束后再次清理本次运行产生的残留。
-5. 通过 `setsid` 让脚本脱离 GUI 父 session，避免命名空间继承问题。
-
-如果仍然失败，请在外部终端中手动确认：
+请在普通终端中手动检查并清理：
 
 ```bash
 ls -ld /dev/shm
@@ -555,7 +556,7 @@ python3 -c "import multiprocessing as mp; q=mp.Queue(); q.put('ok'); print(q.get
 ok
 ```
 
-如果手动清理后仍报错，可能是命名空间或 AppArmor 限制，需要从普通终端启动 AnsiblePilot，或重启系统。
+如果手动清理后仍报错，可能是命名空间或 AppArmor 限制，建议从普通终端启动 AnsiblePilot，或重启系统。
 
 ## 11. 推荐使用流程
 
