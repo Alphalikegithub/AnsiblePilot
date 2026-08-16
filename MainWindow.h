@@ -66,6 +66,11 @@ private slots:
     void copyInventoryPreview();
     void openInventoryPreviewTab();
 
+    void loadPlaybookPreview();
+    void savePlaybookPreview();
+    void copyPlaybookPreview();
+    void openPlaybookPreviewTab();
+
 private:
     void setupUiStyles();
     void scanFiles();

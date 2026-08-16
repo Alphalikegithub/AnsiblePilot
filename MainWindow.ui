@@ -74,7 +74,7 @@
        <item row="1" column="0">
         <widget class="QLabel" name="labelInventory">
          <property name="text">
-          <string>Inventory</string>
+          <string>主机清单</string>
          </property>
         </widget>
        </item>
@@ -781,6 +781,20 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="selectPlaybookBtn">
+            <property name="text">
+             <string>选择文件</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="previewPlaybookBtn">
+            <property name="text">
+             <string>预览/查看剧本</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>
@@ -1266,7 +1280,7 @@
          </widget>
          <widget class="QWidget" name="tabInventoryPreview">
           <attribute name="title">
-           <string>Inventory 内容预览</string>
+           <string>主机清单预览</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayoutInvPreviewTab">
            <property name="spacing">
@@ -1334,6 +1348,83 @@
            </item>
            <item>
             <widget class="QPlainTextEdit" name="inventoryContentEdit">
+             <property name="readOnly">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabPlaybookPreview">
+          <attribute name="title">
+           <string>剧本 (Playbook) 预览</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayoutPbPreviewTab">
+           <property name="spacing">
+            <number>6</number>
+           </property>
+           <property name="leftMargin">
+            <number>4</number>
+           </property>
+           <property name="topMargin">
+            <number>6</number>
+           </property>
+           <property name="rightMargin">
+            <number>4</number>
+           </property>
+           <property name="bottomMargin">
+            <number>4</number>
+           </property>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutPbPreviewToolbar">
+             <item>
+              <widget class="QLabel" name="labelPbPreviewFile">
+               <property name="text">
+                <string>当前剧本: 未加载</string>
+               </property>
+               <property name="styleSheet">
+                <string>color: #0369a1; font-weight: bold;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacerPbTools">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="reloadPlaybookBtn">
+               <property name="text">
+                <string>重新读取</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="savePlaybookBtn">
+               <property name="text">
+                <string>保存修改</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="copyPlaybookBtn">
+               <property name="text">
+                <string>复制剧本</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QPlainTextEdit" name="playbookContentEdit">
              <property name="readOnly">
               <bool>false</bool>
              </property>

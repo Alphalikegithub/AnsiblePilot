@@ -91,9 +91,27 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->reloadInventoryBtn, &QPushButton::clicked, this, &MainWindow::loadInventoryPreview);
     connect(ui->saveInventoryBtn, &QPushButton::clicked, this, &MainWindow::saveInventoryPreview);
     connect(ui->copyInventoryBtn, &QPushButton::clicked, this, &MainWindow::copyInventoryPreview);
+
+    connect(ui->selectPlaybookBtn, &QPushButton::clicked, this, [this]() {
+        const QString file = QFileDialog::getOpenFileName(this, QStringLiteral("选择 Playbook 剧本文件"), workspace(), QStringLiteral("Ansible 剧本 (*.yaml *.yml);;所有文件 (*.*)"));
+        if (!file.isEmpty()) {
+            if (ui->playbookCombo->findText(file) < 0) {
+                ui->playbookCombo->addItem(file);
+            }
+            ui->playbookCombo->setCurrentText(file);
+            updatePreview();
+        }
+    });
+    connect(ui->previewPlaybookBtn, &QPushButton::clicked, this, &MainWindow::openPlaybookPreviewTab);
+    connect(ui->reloadPlaybookBtn, &QPushButton::clicked, this, &MainWindow::loadPlaybookPreview);
+    connect(ui->savePlaybookBtn, &QPushButton::clicked, this, &MainWindow::savePlaybookPreview);
+    connect(ui->copyPlaybookBtn, &QPushButton::clicked, this, &MainWindow::copyPlaybookPreview);
+
     connect(ui->logTabWidget, &QTabWidget::currentChanged, this, [this](int idx) {
         if (ui->logTabWidget->widget(idx) == ui->tabInventoryPreview) {
             loadInventoryPreview();
+        } else if (ui->logTabWidget->widget(idx) == ui->tabPlaybookPreview) {
+            loadPlaybookPreview();
         }
     });
     connect(ui->refreshScanBtn, &QPushButton::clicked, this, [this]() {
@@ -254,7 +272,10 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // 3. 批量部署
-    connect(ui->playbookCombo, &QComboBox::currentTextChanged, this, &MainWindow::updatePreview);
+    connect(ui->playbookCombo, &QComboBox::currentTextChanged, this, [this](const QString &) {
+        updatePreview();
+        loadPlaybookPreview();
+    });
     connect(ui->runPlaybookBtn, &QPushButton::clicked, this, [this]() {
         const QString pb = ui->playbookCombo->currentText().trimmed();
         if (pb.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请选择有效的 Playbook 剧本文件。")); return; }
@@ -362,10 +383,10 @@ void MainWindow::setupUiStyles()
         "QPushButton:pressed { background-color: #bfdbfe; }"
         "QPushButton:disabled { background-color: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; }"
 
-        "QPushButton#selectInventoryBtn, QPushButton#restartServiceBtn, QPushButton#runPlaybookBtn, QPushButton#runBatchCmdBtn, QPushButton#runUploadBtn, QPushButton#saveInventoryBtn {"
+        "QPushButton#selectInventoryBtn, QPushButton#restartServiceBtn, QPushButton#runPlaybookBtn, QPushButton#runBatchCmdBtn, QPushButton#runUploadBtn, QPushButton#saveInventoryBtn, QPushButton#savePlaybookBtn {"
         "  background-color: #2563eb; color: #ffffff; border: 1px solid #1d4ed8; font-weight: bold;"
         "}"
-        "QPushButton#selectInventoryBtn:hover, QPushButton#restartServiceBtn:hover, QPushButton#runPlaybookBtn:hover, QPushButton#runBatchCmdBtn:hover, QPushButton#runUploadBtn:hover, QPushButton#saveInventoryBtn:hover {"
+        "QPushButton#selectInventoryBtn:hover, QPushButton#restartServiceBtn:hover, QPushButton#runPlaybookBtn:hover, QPushButton#runBatchCmdBtn:hover, QPushButton#runUploadBtn:hover, QPushButton#saveInventoryBtn:hover, QPushButton#savePlaybookBtn:hover {"
         "  background-color: #1d4ed8;"
         "}"
 
@@ -377,7 +398,7 @@ void MainWindow::setupUiStyles()
 
         "QTableWidget { border: 1px solid #cbd5e1; border-radius: 6px; background-color: #ffffff; gridline-color: #e2e8f0; selection-background-color: #dbeafe; selection-color: #1e293b; }"
         "QHeaderView::section { background-color: #f1f5f9; color: #334155; font-weight: bold; border: none; border-right: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 6px; }"
-        "QPlainTextEdit#logEdit, QPlainTextEdit#inventoryContentEdit { background-color: #ffffff; color: #1e293b; font-family: 'Noto Sans Mono', 'DejaVu Sans Mono', 'Consolas', 'Courier New', monospace; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; selection-background-color: #bfdbfe; selection-color: #0f172a; line-height: 1.4; }"
+        "QPlainTextEdit#logEdit, QPlainTextEdit#inventoryContentEdit, QPlainTextEdit#playbookContentEdit { background-color: #ffffff; color: #1e293b; font-family: 'Noto Sans Mono', 'DejaVu Sans Mono', 'Consolas', 'Courier New', monospace; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; selection-background-color: #bfdbfe; selection-color: #0f172a; line-height: 1.4; }"
         "QPushButton#deleteFileBtn { background-color: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; font-weight: bold; border-radius: 6px; }"
         "QPushButton#deleteFileBtn:hover { background-color: #fecaca; border-color: #f87171; }"
     );
@@ -603,6 +624,8 @@ void MainWindow::scanFiles()
     ui->playbookCombo->blockSignals(pbBlocked);
 
     loadClusterConfig();
+    loadInventoryPreview();
+    loadPlaybookPreview();
 }
 
 QString MainWindow::ansiToHtml(const QString &text) const
@@ -1298,4 +1321,91 @@ void MainWindow::copyInventoryPreview()
     }
     QApplication::clipboard()->setText(text);
     QMessageBox::information(this, QStringLiteral("已复制"), QStringLiteral("当前主机清单全部文本内容已复制到剪贴板。"));
+}
+
+void MainWindow::openPlaybookPreviewTab()
+{
+    loadPlaybookPreview();
+    ui->logTabWidget->setCurrentWidget(ui->tabPlaybookPreview);
+}
+
+void MainWindow::loadPlaybookPreview()
+{
+    const QString currentPb = ui->playbookCombo->currentText().trimmed();
+    if (currentPb.isEmpty()) {
+        ui->labelPbPreviewFile->setText(QStringLiteral("当前剧本: (未选择 Playbook 剧本文件)"));
+        ui->playbookContentEdit->setPlaceholderText(QStringLiteral("请在上方「批量部署」中指定或选择一个 Playbook 剧本文件 (*.yaml / *.yml)"));
+        ui->playbookContentEdit->clear();
+        return;
+    }
+
+    QString pbFilePath = currentPb;
+    if (!QDir::isAbsolutePath(pbFilePath)) {
+        pbFilePath = QDir(workspace()).filePath(pbFilePath);
+    }
+
+    QFile file(pbFilePath);
+    if (!file.exists()) {
+        ui->labelPbPreviewFile->setText(QStringLiteral("当前剧本: %1 (文件不存在)").arg(pbFilePath));
+        ui->playbookContentEdit->clear();
+        ui->playbookContentEdit->setPlaceholderText(QStringLiteral("剧本文件不存在: %1\n您可以直接在此处编写 YAML 剧本内容并点击「保存修改」快速新建。").arg(pbFilePath));
+        return;
+    }
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        ui->labelPbPreviewFile->setText(QStringLiteral("当前剧本: %1 (无法读取，权限不足)").arg(pbFilePath));
+        return;
+    }
+
+    QTextStream in(&file);
+    const QString content = in.readAll();
+    file.close();
+
+    const int lineCount = content.count(QLatin1Char('\n')) + (content.isEmpty() ? 0 : 1);
+    ui->labelPbPreviewFile->setText(QStringLiteral("当前剧本: %1 (共 %2 行, 大小 %3 字节)").arg(pbFilePath).arg(lineCount).arg(content.toUtf8().size()));
+    ui->playbookContentEdit->setPlainText(content);
+}
+
+void MainWindow::savePlaybookPreview()
+{
+    const QString currentPb = ui->playbookCombo->currentText().trimmed();
+    if (currentPb.isEmpty()) {
+        QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请先在「批量部署」中指定有效的 Playbook 剧本文件路径。"));
+        return;
+    }
+
+    QString pbFilePath = currentPb;
+    if (!QDir::isAbsolutePath(pbFilePath)) {
+        pbFilePath = QDir(workspace()).filePath(pbFilePath);
+    }
+
+    QFileInfo fi(pbFilePath);
+    QDir dir = fi.dir();
+    if (!dir.exists()) {
+        dir.mkpath(QStringLiteral("."));
+    }
+
+    QFile file(pbFilePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        QMessageBox::critical(this, QStringLiteral("保存失败"), QStringLiteral("无法写入目标剧本文件:\n%1\n请检查文件是否被占用或目录权限。").arg(pbFilePath));
+        return;
+    }
+
+    QTextStream out(&file);
+    out << ui->playbookContentEdit->toPlainText();
+    file.close();
+
+    appendLog(QStringLiteral("\n[配置提示] 已成功保存修改至 Playbook 剧本: %1\n").arg(pbFilePath));
+    QMessageBox::information(this, QStringLiteral("保存成功"), QStringLiteral("Playbook 剧本内容已成功保存！"));
+}
+
+void MainWindow::copyPlaybookPreview()
+{
+    const QString text = ui->playbookContentEdit->toPlainText();
+    if (text.isEmpty()) {
+        QMessageBox::information(this, QStringLiteral("提示"), QStringLiteral("当前剧本内容为空。"));
+        return;
+    }
+    QApplication::clipboard()->setText(text);
+    QMessageBox::information(this, QStringLiteral("已复制"), QStringLiteral("当前 Playbook 剧本全部 YAML 内容已复制到剪贴板。"));
 }
