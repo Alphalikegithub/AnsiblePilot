@@ -61,6 +61,11 @@ private slots:
     void onPresetCmdChanged(int index);
     void applyPresetCmd();
 
+    void loadInventoryPreview();
+    void saveInventoryPreview();
+    void copyInventoryPreview();
+    void openInventoryPreviewTab();
+
 private:
     void setupUiStyles();
     void scanFiles();

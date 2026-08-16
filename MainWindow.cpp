@@ -87,6 +87,15 @@ MainWindow::MainWindow(QWidget *parent)
             updatePreview();
         }
     });
+    connect(ui->previewInventoryBtn, &QPushButton::clicked, this, &MainWindow::openInventoryPreviewTab);
+    connect(ui->reloadInventoryBtn, &QPushButton::clicked, this, &MainWindow::loadInventoryPreview);
+    connect(ui->saveInventoryBtn, &QPushButton::clicked, this, &MainWindow::saveInventoryPreview);
+    connect(ui->copyInventoryBtn, &QPushButton::clicked, this, &MainWindow::copyInventoryPreview);
+    connect(ui->logTabWidget, &QTabWidget::currentChanged, this, [this](int idx) {
+        if (ui->logTabWidget->widget(idx) == ui->tabInventoryPreview) {
+            loadInventoryPreview();
+        }
+    });
     connect(ui->refreshScanBtn, &QPushButton::clicked, this, [this]() {
         scanFiles();
         updateInventoryGroups();
@@ -353,10 +362,10 @@ void MainWindow::setupUiStyles()
         "QPushButton:pressed { background-color: #bfdbfe; }"
         "QPushButton:disabled { background-color: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; }"
 
-        "QPushButton#selectInventoryBtn, QPushButton#restartServiceBtn, QPushButton#runPlaybookBtn, QPushButton#runBatchCmdBtn, QPushButton#runUploadBtn {"
+        "QPushButton#selectInventoryBtn, QPushButton#restartServiceBtn, QPushButton#runPlaybookBtn, QPushButton#runBatchCmdBtn, QPushButton#runUploadBtn, QPushButton#saveInventoryBtn {"
         "  background-color: #2563eb; color: #ffffff; border: 1px solid #1d4ed8; font-weight: bold;"
         "}"
-        "QPushButton#selectInventoryBtn:hover, QPushButton#restartServiceBtn:hover, QPushButton#runPlaybookBtn:hover, QPushButton#runBatchCmdBtn:hover, QPushButton#runUploadBtn:hover {"
+        "QPushButton#selectInventoryBtn:hover, QPushButton#restartServiceBtn:hover, QPushButton#runPlaybookBtn:hover, QPushButton#runBatchCmdBtn:hover, QPushButton#runUploadBtn:hover, QPushButton#saveInventoryBtn:hover {"
         "  background-color: #1d4ed8;"
         "}"
 
@@ -368,7 +377,7 @@ void MainWindow::setupUiStyles()
 
         "QTableWidget { border: 1px solid #cbd5e1; border-radius: 6px; background-color: #ffffff; gridline-color: #e2e8f0; selection-background-color: #dbeafe; selection-color: #1e293b; }"
         "QHeaderView::section { background-color: #f1f5f9; color: #334155; font-weight: bold; border: none; border-right: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 6px; }"
-        "QPlainTextEdit#logEdit { background-color: #ffffff; color: #1e293b; font-family: 'Noto Sans Mono', 'DejaVu Sans Mono', 'Consolas', 'Courier New', monospace; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; selection-background-color: #bfdbfe; selection-color: #0f172a; }"
+        "QPlainTextEdit#logEdit, QPlainTextEdit#inventoryContentEdit { background-color: #ffffff; color: #1e293b; font-family: 'Noto Sans Mono', 'DejaVu Sans Mono', 'Consolas', 'Courier New', monospace; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; selection-background-color: #bfdbfe; selection-color: #0f172a; line-height: 1.4; }"
         "QPushButton#deleteFileBtn { background-color: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; font-weight: bold; border-radius: 6px; }"
         "QPushButton#deleteFileBtn:hover { background-color: #fecaca; border-color: #f87171; }"
     );
@@ -466,6 +475,7 @@ void MainWindow::updateInventoryGroups()
         ui->hostGroupCombo->setCurrentIndex(0);
     }
     ui->hostGroupCombo->blockSignals(false);
+    loadInventoryPreview();
 }
 
 void MainWindow::scanFiles()
@@ -489,19 +499,20 @@ void MainWindow::scanFiles()
         foundInventories.append(QStringLiteral("/etc/ansible/hosts"));
     }
 
-    // 2. 动态扫描工作空间目录下所有匹配 hosts / inventory / *.ini / *.cfg 等文件
+    // 2. 动态扫描工作空间目录下所有主机清单文件 (INI / 文本格式 / 命名包含 hosts 或 inventory)
     const QStringList invFilters = {
         QStringLiteral("*hosts*"),
         QStringLiteral("*inventory*"),
         QStringLiteral("*.ini"),
         QStringLiteral("*.cfg"),
-        QStringLiteral("*.yaml"),
-        QStringLiteral("*.yml")
+        QStringLiteral("*.txt")
     };
     const QStringList scannedFiles = dir.entryList(invFilters, QDir::Files | QDir::Readable, QDir::Name);
     for (const QString &f : scannedFiles) {
-        // 过滤掉明显的非 inventory 文件
-        if (f.endsWith(QStringLiteral(".log")) || f.endsWith(QStringLiteral(".tmp")) || f == QStringLiteral("cluster_config.xml")) {
+        // 过滤掉日志、临时文件以及剧本文件
+        if (f.endsWith(QStringLiteral(".log")) || f.endsWith(QStringLiteral(".tmp")) || 
+            f.endsWith(QStringLiteral(".yaml")) || f.endsWith(QStringLiteral(".yml")) ||
+            f == QStringLiteral("cluster_config.xml")) {
             continue;
         }
         const QString fullPath = dir.filePath(f);
@@ -1199,4 +1210,92 @@ void MainWindow::applyPresetCmd()
         }
     }
     updatePreview();
+}
+
+void MainWindow::openInventoryPreviewTab()
+{
+    loadInventoryPreview();
+    ui->logTabWidget->setCurrentWidget(ui->tabInventoryPreview);
+}
+
+void MainWindow::loadInventoryPreview()
+{
+    const QString currentInventory = inventory();
+    if (currentInventory.isEmpty()) {
+        ui->labelInvPreviewFile->setText(QStringLiteral("当前主机清单: (未选择主机清单文件)"));
+        ui->inventoryContentEdit->setPlaceholderText(QStringLiteral("请在上方「基础配置」中指定或选择一个主机清单 (Inventory) 文件"));
+        ui->inventoryContentEdit->clear();
+        return;
+    }
+
+    QString hostFilePath = currentInventory;
+    if (!QDir::isAbsolutePath(hostFilePath)) {
+        hostFilePath = QDir(workspace()).filePath(hostFilePath);
+    }
+
+    QFile file(hostFilePath);
+    if (!file.exists()) {
+        ui->labelInvPreviewFile->setText(QStringLiteral("当前主机清单: %1 (文件不存在)").arg(hostFilePath));
+        ui->inventoryContentEdit->clear();
+        ui->inventoryContentEdit->setPlaceholderText(QStringLiteral("文件不存在: %1\n您可以直接在此处编写主机清单内容并点击「保存修改」新建此文件。").arg(hostFilePath));
+        return;
+    }
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        ui->labelInvPreviewFile->setText(QStringLiteral("当前主机清单: %1 (无法读取，权限不足)").arg(hostFilePath));
+        return;
+    }
+
+    QTextStream in(&file);
+    const QString content = in.readAll();
+    file.close();
+
+    const int lineCount = content.count(QLatin1Char('\n')) + (content.isEmpty() ? 0 : 1);
+    ui->labelInvPreviewFile->setText(QStringLiteral("当前主机清单: %1 (共 %2 行, 大小 %3 字节)").arg(hostFilePath).arg(lineCount).arg(content.toUtf8().size()));
+    ui->inventoryContentEdit->setPlainText(content);
+}
+
+void MainWindow::saveInventoryPreview()
+{
+    const QString currentInventory = inventory();
+    if (currentInventory.isEmpty()) {
+        QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请先在上方「基础配置」中指定有效的主机清单文件路径。"));
+        return;
+    }
+
+    QString hostFilePath = currentInventory;
+    if (!QDir::isAbsolutePath(hostFilePath)) {
+        hostFilePath = QDir(workspace()).filePath(hostFilePath);
+    }
+
+    QFileInfo fi(hostFilePath);
+    QDir dir = fi.dir();
+    if (!dir.exists()) {
+        dir.mkpath(QStringLiteral("."));
+    }
+
+    QFile file(hostFilePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        QMessageBox::critical(this, QStringLiteral("保存失败"), QStringLiteral("无法写入目标文件:\n%1\n请检查文件是否被占用或目录权限。").arg(hostFilePath));
+        return;
+    }
+
+    QTextStream out(&file);
+    out << ui->inventoryContentEdit->toPlainText();
+    file.close();
+
+    appendLog(QStringLiteral("\n[配置提示] 已成功保存修改至主机清单: %1\n").arg(hostFilePath));
+    QMessageBox::information(this, QStringLiteral("保存成功"), QStringLiteral("主机清单内容已成功保存！\n已自动刷新主机组列表。"));
+    updateInventoryGroups();
+}
+
+void MainWindow::copyInventoryPreview()
+{
+    const QString text = ui->inventoryContentEdit->toPlainText();
+    if (text.isEmpty()) {
+        QMessageBox::information(this, QStringLiteral("提示"), QStringLiteral("当前主机清单内容为空。"));
+        return;
+    }
+    QApplication::clipboard()->setText(text);
+    QMessageBox::information(this, QStringLiteral("已复制"), QStringLiteral("当前主机清单全部文本内容已复制到剪贴板。"));
 }

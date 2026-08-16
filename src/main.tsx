@@ -47,12 +47,12 @@ const App: React.FC = () => {
         </div>
 
         <div style={{ marginTop: '20px', padding: '16px', backgroundColor: '#1e293b', borderRadius: '8px', border: '1px solid #334155' }}>
-          <h3 style={{ color: '#38bdf8', margin: '0 0 8px 0', fontSize: '15px' }}>📁 配置文件与代码组织规范：</h3>
+          <h3 style={{ color: '#38bdf8', margin: '0 0 8px 0', fontSize: '15px' }}>📁 核心功能与亮点特性：</h3>
           <ol style={{ paddingLeft: '20px', lineHeight: '1.8', color: '#cbd5e1', fontSize: '13px', margin: 0 }}>
-            <li>配置文件统一存放在 <code>config/cluster_config.xml</code> 中，包含热备对、进程关联以及常用命令三大模块。</li>
-            <li>程序启动或刷新扫描时自动通过 <code>QXmlStreamReader</code> 解析 XML；同时代码内置了健壮的 Fallback 数据保证离线开箱即用。</li>
-            <li>在「进程与日志」Tab 下拉选择即可一键填充进程关键字、关联日志（自动指向 <code>/root/work/</code>），并可一键关联 Limit 主机。</li>
-            <li>在「批量命令」Tab 下拉选择即可一键填充脚本路径与推荐执行模块，极大提升生产运维操作效率。</li>
+            <li><strong>主机清单在线预览与快速编辑</strong>：在「基础配置」栏提供「预览/查看」按钮，并在下方控制台新增「主机清单预览」选项卡，支持实时查看、重新读取、在线修改保存与一键复制。</li>
+            <li><strong>自定义与预设双模式支持</strong>：「进程与日志」和「批量命令」支持手敲自定义任意进程名、日志路径与复杂多行命令，也可一键选择预设快速回填。</li>
+            <li><strong>主机清单持久记忆防重置</strong>：刷新扫描自动动态扫描工作目录下所有 <code>*hosts*</code>、<code>*inventory*</code>、<code>*.ini</code> 清单，并精准保留用户当前选择的文件（如 <code>product_hosts</code>）。</li>
+            <li><strong>XML 统一配置管理</strong>：配置文件统一存放在 <code>config/cluster_config.xml</code> 中，包含热备对、进程关联以及常用启动脚本三大模块。</li>
           </ol>
         </div>
       </div>
