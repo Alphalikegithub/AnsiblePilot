@@ -20,14 +20,16 @@ public:
     ~MainWindow() override;
 
 private slots:
-    void onTabChanged(int index);
+    void onMainTabChanged(int index);
+    void onOpsSubTabChanged(int index);
+    void onInventorySelected(int index);
     void onSearchLog(const QString &keyword);
     void clearLogs();
     void exportLogs();
     void copyLogs();
-    void onInventorySelected(int index);
 
 private:
+    void setupUiStyles();
     void scanFiles();
     void updateInventoryGroups();
     void runProcess(const QString &program, const QStringList &arguments, const QString &workingDirectory);
@@ -37,7 +39,6 @@ private:
     void pollExternalTerminalOutput();
     int recordHistoryStart(const QString &command);
     void recordHistoryFinish(int row, const QString &status, const QString &exitCode, qint64 durationMs = 0);
-    bool ensureSharedMemoryAvailable();
     void cleanupOldTempFiles();
     
     QString ansiToHtml(const QString &text) const;

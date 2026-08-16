@@ -6,67 +6,75 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1100</width>
-    <height>750</height>
+    <width>1160</width>
+    <height>820</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>AnsiblePilot - 运维自动化控制台</string>
+   <string>Ansible 批量运维工具</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayoutMain">
     <property name="spacing">
-     <number>8</number>
+     <number>10</number>
     </property>
     <property name="leftMargin">
-     <number>10</number>
+     <number>14</number>
     </property>
     <property name="topMargin">
-     <number>10</number>
+     <number>12</number>
     </property>
     <property name="rightMargin">
-     <number>10</number>
+     <number>14</number>
     </property>
     <property name="bottomMargin">
-     <number>10</number>
+     <number>12</number>
     </property>
     <item>
-     <widget class="QGroupBox" name="groupEnvironment">
+     <widget class="QGroupBox" name="groupBasic">
       <property name="title">
-       <string>环境与全局参数配置</string>
+       <string>基础配置</string>
       </property>
-      <layout class="QGridLayout" name="gridLayoutEnv">
-       <property name="spacing">
-        <number>6</number>
+      <layout class="QGridLayout" name="gridLayoutBasic">
+       <property name="horizontalSpacing">
+        <number>10</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>8</number>
+       </property>
+       <property name="leftMargin">
+        <number>12</number>
+       </property>
+       <property name="topMargin">
+        <number>14</number>
+       </property>
+       <property name="rightMargin">
+        <number>12</number>
+       </property>
+       <property name="bottomMargin">
+        <number>12</number>
        </property>
        <item row="0" column="0">
-        <widget class="QLabel" name="labelWorkspace">
+        <widget class="QLabel" name="labelWorkDir">
          <property name="text">
-          <string>工作空间:</string>
+          <string>工作目录</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="1" colspan="2">
-        <widget class="QLineEdit" name="workspaceEdit"/>
-       </item>
-       <item row="0" column="3">
-        <widget class="QPushButton" name="browseWorkspaceBtn">
-         <property name="text">
-          <string>浏览目录...</string>
-         </property>
-        </widget>
+       <item row="0" column="1" colspan="3">
+        <widget class="QLineEdit" name="workDirEdit"/>
        </item>
        <item row="0" column="4">
-        <widget class="QPushButton" name="scanBtn">
+        <widget class="QPushButton" name="selectWorkDirBtn">
          <property name="text">
-          <string>重新扫描</string>
+          <string>选择目录</string>
          </property>
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="labelHosts">
+        <widget class="QLabel" name="labelInventory">
          <property name="text">
-          <string>Hosts 源文件:</string>
+          <string>Inventory</string>
          </property>
         </widget>
        </item>
@@ -75,17 +83,33 @@
          <property name="editable">
           <bool>true</bool>
          </property>
-        </widget>
-       </item>
-       <item row="1" column="2">
-        <widget class="QLabel" name="labelGroup">
-         <property name="text">
-          <string>目标主机组:</string>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
         </widget>
        </item>
-       <item row="1" column="3" colspan="2">
-        <widget class="QComboBox" name="groupCombo">
+       <item row="1" column="2">
+        <widget class="QPushButton" name="selectInventoryBtn">
+         <property name="text">
+          <string>选择 Inventory</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QLabel" name="labelHostGroup">
+         <property name="text">
+          <string>主机组</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4">
+        <widget class="QComboBox" name="hostGroupCombo">
          <property name="editable">
           <bool>true</bool>
          </property>
@@ -94,28 +118,35 @@
        <item row="2" column="0">
         <widget class="QLabel" name="labelLimit">
          <property name="text">
-          <string>限制主机 (--limit):</string>
+          <string>Limit</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="2" column="1" colspan="3">
         <widget class="QLineEdit" name="limitEdit">
          <property name="placeholderText">
-          <string>可选，如 172.10.10.11 或 host1,host2</string>
+          <string>可选: 限制主机，例如 172.10.10.11</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="2">
-        <widget class="QLabel" name="labelExtra">
+       <item row="2" column="4">
+        <widget class="QPushButton" name="refreshScanBtn">
          <property name="text">
-          <string>额外参数:</string>
+          <string>刷新扫描</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="3" colspan="2">
+       <item row="3" column="0">
+        <widget class="QLabel" name="labelExtraArgs">
+         <property name="text">
+          <string>额外参数</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1" colspan="4">
         <widget class="QLineEdit" name="extraArgsEdit">
          <property name="placeholderText">
-          <string>可选附加参数，如 -v, -C (check mode)</string>
+          <string>可选: --ask-pass --ask-become-pass --check</string>
          </property>
         </widget>
        </item>
@@ -123,90 +154,472 @@
      </widget>
     </item>
     <item>
-     <widget class="QTabWidget" name="actionTabs">
+     <widget class="QTabWidget" name="mainTabWidget">
       <property name="currentIndex">
        <number>0</number>
       </property>
-      <widget class="QWidget" name="tabQuickOps">
+      <widget class="QWidget" name="tabCommonOps">
        <attribute name="title">
-        <string>常用快捷运维</string>
+        <string>常用操作</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayoutQuick">
+       <layout class="QVBoxLayout" name="verticalLayoutCommonOps">
+        <property name="spacing">
+         <number>8</number>
+        </property>
+        <property name="leftMargin">
+         <number>10</number>
+        </property>
+        <property name="topMargin">
+         <number>10</number>
+        </property>
+        <property name="rightMargin">
+         <number>10</number>
+        </property>
+        <property name="bottomMargin">
+         <number>10</number>
+        </property>
         <item>
-         <layout class="QGridLayout" name="gridLayoutQuick">
-          <property name="spacing">
-           <number>8</number>
+         <widget class="QLabel" name="labelCommonTips">
+          <property name="text">
+           <string>下面是常用运维操作。点击按钮即可一键执行，无需自己写 playbook；命令会以原始 Ansible 形式同步到下方日志区域，方便对照学习。</string>
           </property>
-          <item row="0" column="0">
-           <widget class="QPushButton" name="pingBtn">
-            <property name="text">
-             <string>连通性测试 (Ping)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QPushButton" name="factsBtn">
-            <property name="text">
-             <string>采集主机事实 (Setup)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QPushButton" name="uptimeBtn">
-            <property name="text">
-             <string>检查运行时间 (Uptime)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QPushButton" name="diskBtn">
-            <property name="text">
-             <string>检查磁盘空间 (df -h)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QPushButton" name="memoryBtn">
-            <property name="text">
-             <string>检查内存使用 (free -m)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QPushButton" name="checkYamlBtn">
-            <property name="text">
-             <string>语法检查 (Syntax-Check)</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
         <item>
-         <spacer name="verticalSpacerQuick">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
+         <widget class="QTabWidget" name="opsSubTabWidget">
+          <property name="currentIndex">
+           <number>0</number>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>10</height>
-           </size>
-          </property>
-         </spacer>
+          <widget class="QWidget" name="subTabService">
+           <attribute name="title">
+            <string>服务管理</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayoutService">
+            <property name="spacing">
+             <number>10</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayoutServiceName">
+              <item>
+               <widget class="QLabel" name="labelServiceName">
+                <property name="text">
+                 <string>服务名</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="serviceNameEdit">
+                <property name="text">
+                 <string>sshd</string>
+                </property>
+                <property name="placeholderText">
+                 <string>例如: sshd、nginx</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayoutServiceBtns">
+              <property name="spacing">
+               <number>10</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="startServiceBtn">
+                <property name="text">
+                 <string>启动服务</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="stopServiceBtn">
+                <property name="text">
+                 <string>停止服务</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="restartServiceBtn">
+                <property name="text">
+                 <string>重启服务</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="statusServiceBtn">
+                <property name="text">
+                 <string>查看状态</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <spacer name="verticalSpacerService">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>10</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="subTabSysInfo">
+           <attribute name="title">
+            <string>系统信息</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayoutSysInfo">
+            <item>
+             <layout class="QGridLayout" name="gridLayoutSysInfo">
+              <property name="spacing">
+               <number>10</number>
+              </property>
+              <item row="0" column="0">
+               <widget class="QPushButton" name="diskInfoBtn">
+                <property name="text">
+                 <string>磁盘使用 (df -h)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QPushButton" name="memInfoBtn">
+                <property name="text">
+                 <string>内存使用 (free -h)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QPushButton" name="uptimeBtn">
+                <property name="text">
+                 <string>运行时间 (uptime)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QPushButton" name="hostInfoBtn">
+                <property name="text">
+                 <string>主机名与内核 (uname -a)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QPushButton" name="cpuLoadBtn">
+                <property name="text">
+                 <string>CPU 负载 (top)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QPushButton" name="whoBtn">
+                <property name="text">
+                 <string>当前登录用户 (who)</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <spacer name="verticalSpacerSys">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>10</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="subTabProcLog">
+           <attribute name="title">
+            <string>进程与日志</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayoutProcLog">
+            <property name="spacing">
+             <number>8</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayoutProc">
+              <item>
+               <widget class="QLabel" name="labelProc">
+                <property name="text">
+                 <string>进程关键字:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="procKeywordEdit">
+                <property name="placeholderText">
+                 <string>例如: nginx、serveragent</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="psBtn">
+                <property name="text">
+                 <string>查看进程 (ps)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pkillBtn">
+                <property name="text">
+                 <string>杀进程 (pkill)</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayoutLogFile">
+              <item>
+               <widget class="QLabel" name="labelLogPath">
+                <property name="text">
+                 <string>日志文件路径:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="logPathEdit">
+                <property name="text">
+                 <string>/var/log/messages</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="labelLogLines">
+                <property name="text">
+                 <string>行数:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="logLinesEdit">
+                <property name="text">
+                 <string>200</string>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>60</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="tailLogBtn">
+                <property name="text">
+                 <string>查看末尾 (tail)</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayoutLogGrep">
+              <item>
+               <widget class="QLabel" name="labelGrep">
+                <property name="text">
+                 <string>搜索关键词:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="grepKeywordEdit">
+                <property name="placeholderText">
+                 <string>例如: ERROR、failed</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="grepLogBtn">
+                <property name="text">
+                 <string>搜索日志 (grep)</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="subTabFile">
+           <attribute name="title">
+            <string>文件操作</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayoutFileOps">
+            <property name="spacing">
+             <number>8</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayoutFileRemote">
+              <item>
+               <widget class="QLabel" name="labelRemoteFile">
+                <property name="text">
+                 <string>远端路径:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="remoteFileEdit">
+                <property name="placeholderText">
+                 <string>远端文件或目录路径，例如 /tmp/test.txt</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="fetchFileBtn">
+                <property name="text">
+                 <string>下载文件 (fetch)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="deleteFileBtn">
+                <property name="text">
+                 <string>删除文件 (absent)</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayoutFileDir">
+              <item>
+               <widget class="QLabel" name="labelDirPerm">
+                <property name="text">
+                 <string>权限/属组:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="fileModeEdit">
+                <property name="text">
+                 <string>0755</string>
+                </property>
+                <property name="placeholderText">
+                 <string>例如 0755</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="mkdirBtn">
+                <property name="text">
+                 <string>创建目录 (mkdir)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="chmodBtn">
+                <property name="text">
+                 <string>修改权限 (chmod)</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="subTabPkg">
+           <attribute name="title">
+            <string>软件包</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayoutPkg">
+            <property name="spacing">
+             <number>10</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayoutPkgInput">
+              <item>
+               <widget class="QLabel" name="labelPkgName">
+                <property name="text">
+                 <string>软件包名:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="pkgNameEdit">
+                <property name="placeholderText">
+                 <string>例如: vim、nginx、curl</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayoutPkgBtns">
+              <item>
+               <widget class="QPushButton" name="pkgInstallBtn">
+                <property name="text">
+                 <string>自动安装/更新 (package)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pkgRemoveBtn">
+                <property name="text">
+                 <string>卸载软件包</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pkgAptInstallBtn">
+                <property name="text">
+                 <string>apt 安装</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pkgYumInstallBtn">
+                <property name="text">
+                 <string>yum 安装</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </widget>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabPlaybook">
+      <widget class="QWidget" name="tabBatchDeploy">
        <attribute name="title">
-        <string>Playbook 剧本部署</string>
+        <string>批量部署</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayoutPlaybook">
+       <layout class="QVBoxLayout" name="verticalLayoutBatchDeploy">
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <property name="leftMargin">
+         <number>12</number>
+        </property>
+        <property name="topMargin">
+         <number>12</number>
+        </property>
+        <property name="rightMargin">
+         <number>12</number>
+        </property>
+        <property name="bottomMargin">
+         <number>12</number>
+        </property>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutPlaybookFile">
+         <layout class="QHBoxLayout" name="horizontalLayoutPbSelect">
           <item>
-           <widget class="QLabel" name="labelPlaybookFile">
+           <widget class="QLabel" name="labelPlaybook">
             <property name="text">
-             <string>剧本文件 (*.yaml / *.yml):</string>
+             <string>Playbook 剧本文件 (*.yaml / *.yml):</string>
             </property>
            </widget>
           </item>
@@ -226,18 +639,28 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutPlaybookBtns">
+         <layout class="QHBoxLayout" name="horizontalLayoutPbBtns">
+          <property name="spacing">
+           <number>10</number>
+          </property>
           <item>
-           <widget class="QPushButton" name="runPlaybookTermBtn">
+           <widget class="QPushButton" name="runPlaybookBtn">
             <property name="text">
-             <string>外部终端执行 (推荐)</string>
+             <string>执行选中 Playbook</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="runPlaybookBgBtn">
+           <widget class="QPushButton" name="pingTestBtn">
             <property name="text">
-             <string>内置静默执行</string>
+             <string>Ping 测试 (连通性)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="syntaxCheckBtn">
+            <property name="text">
+             <string>语法检查 (--syntax-check)</string>
             </property>
            </widget>
           </item>
@@ -271,13 +694,28 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabCommand">
+      <widget class="QWidget" name="tabBatchCmd">
        <attribute name="title">
-        <string>批量 Ad-hoc 命令</string>
+        <string>批量命令</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayoutCmd">
+       <layout class="QVBoxLayout" name="verticalLayoutBatchCmd">
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <property name="leftMargin">
+         <number>12</number>
+        </property>
+        <property name="topMargin">
+         <number>12</number>
+        </property>
+        <property name="rightMargin">
+         <number>12</number>
+        </property>
+        <property name="bottomMargin">
+         <number>12</number>
+        </property>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutModule">
+         <layout class="QHBoxLayout" name="horizontalLayoutCmdModule">
           <item>
            <widget class="QLabel" name="labelModule">
             <property name="text">
@@ -289,12 +727,12 @@
            <widget class="QComboBox" name="moduleCombo">
             <item>
              <property name="text">
-              <string>command</string>
+              <string>shell</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>shell</string>
+              <string>command</string>
              </property>
             </item>
             <item>
@@ -325,42 +763,35 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutCmdContent">
+         <layout class="QHBoxLayout" name="horizontalLayoutCmdInput">
           <item>
-           <widget class="QLabel" name="labelCmd">
+           <widget class="QLabel" name="labelCmdText">
             <property name="text">
              <string>命令内容:</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPlainTextEdit" name="commandEdit">
+           <widget class="QPlainTextEdit" name="batchCmdEdit">
             <property name="maximumSize">
              <size>
               <width>16777215</width>
-              <height>60</height>
+              <height>65</height>
              </size>
             </property>
             <property name="placeholderText">
-             <string>输入远程执行的 Shell 命令，例如: systemctl status nginx</string>
+             <string>输入要执行的远程命令，例如: ps -ef | grep serveragent</string>
             </property>
            </widget>
           </item>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutCmdBtns">
+         <layout class="QHBoxLayout" name="horizontalLayoutCmdAction">
           <item>
-           <widget class="QPushButton" name="runCmdTermBtn">
+           <widget class="QPushButton" name="runBatchCmdBtn">
             <property name="text">
-             <string>终端执行命令</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="runCmdBgBtn">
-            <property name="text">
-             <string>内置执行</string>
+             <string>批量执行命令</string>
             </property>
            </widget>
           </item>
@@ -381,64 +812,85 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabFile">
+      <widget class="QWidget" name="tabBatchUpload">
        <attribute name="title">
-        <string>批量文件分发</string>
+        <string>批量上传</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayoutFile">
+       <layout class="QVBoxLayout" name="verticalLayoutBatchUpload">
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <property name="leftMargin">
+         <number>12</number>
+        </property>
+        <property name="topMargin">
+         <number>12</number>
+        </property>
+        <property name="rightMargin">
+         <number>12</number>
+        </property>
+        <property name="bottomMargin">
+         <number>12</number>
+        </property>
         <item>
-         <layout class="QGridLayout" name="gridLayoutFile">
+         <layout class="QGridLayout" name="gridLayoutUpload">
+          <property name="horizontalSpacing">
+           <number>10</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>10</number>
+          </property>
           <item row="0" column="0">
-           <widget class="QLabel" name="labelLocalPath">
+           <widget class="QLabel" name="labelUploadSrc">
             <property name="text">
-             <string>本地源路径:</string>
+             <string>本地文件/目录:</string>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QLineEdit" name="localPathEdit">
+           <widget class="QLineEdit" name="uploadSrcEdit">
             <property name="placeholderText">
-             <string>本地文件或目录路径</string>
+             <string>选择要上传的本地程序文件或目录路径</string>
             </property>
            </widget>
           </item>
           <item row="0" column="2">
-           <widget class="QPushButton" name="browseLocalFileBtn">
+           <widget class="QPushButton" name="browseUploadSrcBtn">
             <property name="text">
-             <string>选择文件...</string>
+             <string>选择本地文件/目录</string>
             </property>
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QLabel" name="labelRemotePath">
+           <widget class="QLabel" name="labelUploadDest">
             <property name="text">
-             <string>远程目标路径:</string>
+             <string>远端目标路径:</string>
             </property>
            </widget>
           </item>
           <item row="1" column="1" colspan="2">
-           <widget class="QLineEdit" name="remotePathEdit">
+           <widget class="QLineEdit" name="uploadDestEdit">
             <property name="text">
-             <string>/tmp/</string>
+             <string>/root/work/missionschedulingsoftware/</string>
             </property>
             <property name="placeholderText">
-             <string>远程绝对路径，如 /tmp/ 或 /opt/app/</string>
+             <string>远端保存绝对路径</string>
             </property>
            </widget>
           </item>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutFileBtns">
+         <layout class="QHBoxLayout" name="horizontalLayoutUploadAction">
           <item>
-           <widget class="QPushButton" name="runCopyTermBtn">
+           <widget class="QPushButton" name="runUploadBtn">
             <property name="text">
-             <string>批量分发文件</string>
+             <string>批量上传</string>
             </property>
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacerFile">
+           <spacer name="horizontalSpacerUpload">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -457,231 +909,204 @@
      </widget>
     </item>
     <item>
-     <widget class="QGroupBox" name="groupPreview">
+     <widget class="QGroupBox" name="groupLog">
       <property name="title">
-       <string>即将执行的 Ansible 完整指令预览</string>
+       <string>命令预览与日志</string>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayoutPreview">
+      <layout class="QVBoxLayout" name="verticalLayoutLogGroup">
        <property name="spacing">
-        <number>4</number>
+        <number>6</number>
        </property>
        <property name="leftMargin">
-        <number>6</number>
+        <number>10</number>
        </property>
        <property name="topMargin">
-        <number>6</number>
+        <number>12</number>
        </property>
        <property name="rightMargin">
-        <number>6</number>
+        <number>10</number>
        </property>
        <property name="bottomMargin">
-        <number>6</number>
+        <number>10</number>
        </property>
        <item>
-        <widget class="QPlainTextEdit" name="previewEdit">
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>55</height>
-          </size>
+        <widget class="QTabWidget" name="logTabWidget">
+         <property name="currentIndex">
+          <number>0</number>
          </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
+         <widget class="QWidget" name="tabCmdPreview">
+          <attribute name="title">
+           <string>命令预览</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayoutCmdPreviewTab">
+           <property name="spacing">
+            <number>6</number>
+           </property>
+           <property name="leftMargin">
+            <number>4</number>
+           </property>
+           <property name="topMargin">
+            <number>6</number>
+           </property>
+           <property name="rightMargin">
+            <number>4</number>
+           </property>
+           <property name="bottomMargin">
+            <number>4</number>
+           </property>
+           <item>
+            <widget class="QLineEdit" name="previewEdit">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutLogToolbar">
+             <item>
+              <widget class="QLineEdit" name="searchLogEdit">
+               <property name="placeholderText">
+                <string>搜索日志关键词...</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="searchLogBtn">
+               <property name="text">
+                <string>搜索</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="autoScrollCheck">
+               <property name="text">
+                <string>自动滚屏</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacerLogTools">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="clearLogBtn">
+               <property name="text">
+                <string>清空日志</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="copyLogBtn">
+               <property name="text">
+                <string>复制全部</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="exportLogBtn">
+               <property name="text">
+                <string>导出日志...</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QPlainTextEdit" name="logEdit">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabHistory">
+          <attribute name="title">
+           <string>运行历史</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayoutHistory">
+           <property name="leftMargin">
+            <number>4</number>
+           </property>
+           <property name="topMargin">
+            <number>6</number>
+           </property>
+           <property name="rightMargin">
+            <number>4</number>
+           </property>
+           <property name="bottomMargin">
+            <number>4</number>
+           </property>
+           <item>
+            <widget class="QTableWidget" name="historyTable">
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <column>
+              <property name="text">
+               <string>时间</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>指令内容</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>执行状态</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>退出代码</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>耗时</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>操作</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayoutPreviewTool">
-         <item>
-          <spacer name="horizontalSpacerPrev">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QPushButton" name="copyPreviewBtn">
-           <property name="text">
-            <string>复制完整指令</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <widget class="QPushButton" name="stopTaskBtn">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>34</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>停止当前任务</string>
+         </property>
+        </widget>
        </item>
       </layout>
-     </widget>
-    </item>
-    <item>
-     <widget class="QTabWidget" name="bottomTabs">
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <widget class="QWidget" name="tabLogs">
-       <attribute name="title">
-        <string>实时控制台输出</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayoutLogs">
-        <property name="spacing">
-         <number>4</number>
-        </property>
-        <property name="leftMargin">
-         <number>6</number>
-        </property>
-        <property name="topMargin">
-         <number>6</number>
-        </property>
-        <property name="rightMargin">
-         <number>6</number>
-        </property>
-        <property name="bottomMargin">
-         <number>6</number>
-        </property>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutLogTools">
-          <item>
-           <widget class="QLineEdit" name="searchLogEdit">
-            <property name="placeholderText">
-             <string>搜索日志关键词...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="searchBtn">
-            <property name="text">
-             <string>搜索</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="autoScrollCheck">
-            <property name="text">
-             <string>自动滚屏</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacerLog">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QPushButton" name="clearLogBtn">
-            <property name="text">
-             <string>清空日志</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="copyLogBtn">
-            <property name="text">
-             <string>复制全部</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="exportLogBtn">
-            <property name="text">
-             <string>导出日志...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="stopButton">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>终止当前内置任务</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QPlainTextEdit" name="logEdit">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tabHistory">
-       <attribute name="title">
-        <string>任务执行历史</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayoutHistory">
-        <property name="leftMargin">
-         <number>6</number>
-        </property>
-        <property name="topMargin">
-         <number>6</number>
-        </property>
-        <property name="rightMargin">
-         <number>6</number>
-        </property>
-        <property name="bottomMargin">
-         <number>6</number>
-        </property>
-        <item>
-         <widget class="QTableWidget" name="historyTable">
-          <property name="editTriggers">
-           <set>QAbstractItemView::NoEditTriggers</set>
-          </property>
-          <property name="selectionBehavior">
-           <enum>QAbstractItemView::SelectRows</enum>
-          </property>
-          <column>
-           <property name="text">
-            <string>时间</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>指令内容</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>执行状态</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>退出代码</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>耗时</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>操作</string>
-           </property>
-          </column>
-         </widget>
-        </item>
-       </layout>
-      </widget>
      </widget>
     </item>
    </layout>
@@ -691,7 +1116,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1100</width>
+     <width>1160</width>
      <height>22</height>
     </rect>
    </property>
