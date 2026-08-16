@@ -109,42 +109,42 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->startServiceBtn, &QPushButton::clicked, this, [this]() {
         const QString s = ui->serviceNameEdit->text().trimmed();
         if (s.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入服务名。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("systemd") << QStringLiteral("-a") << QStringLiteral("name=%1 state=started").arg(s), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("systemd"), QStringLiteral("name=%1 state=started").arg(s)), workspace());
     });
     connect(ui->stopServiceBtn, &QPushButton::clicked, this, [this]() {
         const QString s = ui->serviceNameEdit->text().trimmed();
         if (s.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入服务名。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("systemd") << QStringLiteral("-a") << QStringLiteral("name=%1 state=stopped").arg(s), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("systemd"), QStringLiteral("name=%1 state=stopped").arg(s)), workspace());
     });
     connect(ui->restartServiceBtn, &QPushButton::clicked, this, [this]() {
         const QString s = ui->serviceNameEdit->text().trimmed();
         if (s.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入服务名。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("systemd") << QStringLiteral("-a") << QStringLiteral("name=%1 state=restarted").arg(s), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("systemd"), QStringLiteral("name=%1 state=restarted").arg(s)), workspace());
     });
     connect(ui->statusServiceBtn, &QPushButton::clicked, this, [this]() {
         const QString s = ui->serviceNameEdit->text().trimmed();
         if (s.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入服务名。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("shell") << QStringLiteral("-a") << QStringLiteral("systemctl status %1 --no-pager").arg(s), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("shell"), QStringLiteral("systemctl status %1 --no-pager").arg(s)), workspace());
     });
 
     // 2. 常用操作 - 系统信息
     connect(ui->diskInfoBtn, &QPushButton::clicked, this, [this]() {
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("command") << QStringLiteral("-a") << QStringLiteral("df -h"), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("command"), QStringLiteral("df -h")), workspace());
     });
     connect(ui->memInfoBtn, &QPushButton::clicked, this, [this]() {
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("command") << QStringLiteral("-a") << QStringLiteral("free -h"), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("command"), QStringLiteral("free -h")), workspace());
     });
     connect(ui->uptimeBtn, &QPushButton::clicked, this, [this]() {
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("command") << QStringLiteral("-a") << QStringLiteral("uptime"), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("command"), QStringLiteral("uptime")), workspace());
     });
     connect(ui->hostInfoBtn, &QPushButton::clicked, this, [this]() {
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("shell") << QStringLiteral("-a") << QStringLiteral("hostname && uname -a"), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("shell"), QStringLiteral("hostname && uname -a")), workspace());
     });
     connect(ui->cpuLoadBtn, &QPushButton::clicked, this, [this]() {
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("shell") << QStringLiteral("-a") << QStringLiteral("top -b -n1 | head -20"), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("shell"), QStringLiteral("top -b -n1 | head -20")), workspace());
     });
     connect(ui->whoBtn, &QPushButton::clicked, this, [this]() {
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("command") << QStringLiteral("-a") << QStringLiteral("who"), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("command"), QStringLiteral("who")), workspace());
     });
 
     // 2. 常用操作 - 进程与日志
@@ -156,51 +156,65 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->psBtn, &QPushButton::clicked, this, [this]() {
         const QString kw = ui->procKeywordEdit->text().trimmed();
         const QString cmd = kw.isEmpty() ? QStringLiteral("ps -ef | head -50") : QStringLiteral("ps -ef | grep -v grep | grep %1").arg(kw);
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("shell") << QStringLiteral("-a") << cmd, workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("shell"), cmd), workspace());
     });
     connect(ui->pkillBtn, &QPushButton::clicked, this, [this]() {
         const QString kw = ui->procKeywordEdit->text().trimmed();
         if (kw.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入要终止的进程关键字。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("shell") << QStringLiteral("-a") << QStringLiteral("pkill -f %1").arg(kw), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("shell"), QStringLiteral("pkill -f %1").arg(kw)), workspace());
     });
     connect(ui->tailLogBtn, &QPushButton::clicked, this, [this]() {
         const QString p = ui->logPathEdit->text().trimmed();
         const QString n = ui->logLinesEdit->text().trimmed().isEmpty() ? QStringLiteral("200") : ui->logLinesEdit->text().trimmed();
         if (p.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入日志文件路径。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("shell") << QStringLiteral("-a") << QStringLiteral("tail -n %1 %2").arg(n, p), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("shell"), QStringLiteral("tail -n %1 %2").arg(n, p)), workspace());
     });
     connect(ui->grepLogBtn, &QPushButton::clicked, this, [this]() {
         const QString p = ui->logPathEdit->text().trimmed();
         const QString kw = ui->grepKeywordEdit->text().trimmed();
         if (p.isEmpty() || kw.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请完整填写日志路径和搜索关键词。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("shell") << QStringLiteral("-a") << QStringLiteral("grep -n -- %1 %2 | tail -n 200").arg(kw, p), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("shell"), QStringLiteral("grep -n -- %1 %2 | tail -n 200").arg(kw, p)), workspace());
     });
 
     // 2. 常用操作 - 文件操作
-    connect(ui->remoteFileEdit, &QLineEdit::textChanged, this, &MainWindow::updatePreview);
-    connect(ui->fileModeEdit, &QLineEdit::textChanged, this, &MainWindow::updatePreview);
+    connect(ui->fetchRemoteEdit, &QLineEdit::textChanged, this, &MainWindow::updatePreview);
+    connect(ui->fetchLocalEdit, &QLineEdit::textChanged, this, &MainWindow::updatePreview);
+    connect(ui->deleteRemoteEdit, &QLineEdit::textChanged, this, &MainWindow::updatePreview);
+    connect(ui->mkdirRemoteEdit, &QLineEdit::textChanged, this, &MainWindow::updatePreview);
+    connect(ui->mkdirModeEdit, &QLineEdit::textChanged, this, &MainWindow::updatePreview);
+    connect(ui->chmodRemoteEdit, &QLineEdit::textChanged, this, &MainWindow::updatePreview);
+    connect(ui->chmodModeEdit, &QLineEdit::textChanged, this, &MainWindow::updatePreview);
+
+    connect(ui->selectFetchLocalBtn, &QPushButton::clicked, this, [this]() {
+        const QString dir = QFileDialog::getExistingDirectory(this, QStringLiteral("选择本地保存目录"), workspace());
+        if (!dir.isEmpty()) {
+            ui->fetchLocalEdit->setText(dir.endsWith(QLatin1Char('/')) ? dir : dir + QLatin1Char('/'));
+        }
+    });
+
     connect(ui->fetchFileBtn, &QPushButton::clicked, this, [this]() {
-        const QString f = ui->remoteFileEdit->text().trimmed();
-        if (f.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入要下载的远端文件路径。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("fetch") << QStringLiteral("-a") << QStringLiteral("src=%1 dest=./").arg(f), workspace());
+        const QString remote = ui->fetchRemoteEdit->text().trimmed();
+        const QString local = ui->fetchLocalEdit->text().trimmed().isEmpty() ? QStringLiteral("./downloads/") : ui->fetchLocalEdit->text().trimmed();
+        if (remote.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入要下载的远端文件路径。")); return; }
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("fetch"), QStringLiteral("src=%1 dest=%2 flat=yes").arg(remote, local)), workspace());
     });
     connect(ui->deleteFileBtn, &QPushButton::clicked, this, [this]() {
-        const QString f = ui->remoteFileEdit->text().trimmed();
-        if (f.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入要删除的远端路径。")); return; }
-        if (QMessageBox::question(this, QStringLiteral("确认删除"), QStringLiteral("确定要批量删除远端路径 [%1] 吗？此操作不可逆！").arg(f)) != QMessageBox::Yes) return;
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("file") << QStringLiteral("-a") << QStringLiteral("path=%1 state=absent").arg(f), workspace());
+        const QString remote = ui->deleteRemoteEdit->text().trimmed();
+        if (remote.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入要删除的远端路径。")); return; }
+        if (QMessageBox::question(this, QStringLiteral("确认删除"), QStringLiteral("确定要批量删除远端路径 [%1] 吗？此操作不可逆！").arg(remote)) != QMessageBox::Yes) return;
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("file"), QStringLiteral("path=%1 state=absent").arg(remote)), workspace());
     });
     connect(ui->mkdirBtn, &QPushButton::clicked, this, [this]() {
-        const QString f = ui->remoteFileEdit->text().trimmed();
-        const QString m = ui->fileModeEdit->text().trimmed().isEmpty() ? QStringLiteral("0755") : ui->fileModeEdit->text().trimmed();
-        if (f.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入要创建的目录路径。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("file") << QStringLiteral("-a") << QStringLiteral("path=%1 state=directory mode=%2").arg(f, m), workspace());
+        const QString remote = ui->mkdirRemoteEdit->text().trimmed();
+        const QString mode = ui->mkdirModeEdit->text().trimmed().isEmpty() ? QStringLiteral("0755") : ui->mkdirModeEdit->text().trimmed();
+        if (remote.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入要创建的远端目录路径。")); return; }
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("file"), QStringLiteral("path=%1 state=directory mode=%2").arg(remote, mode)), workspace());
     });
     connect(ui->chmodBtn, &QPushButton::clicked, this, [this]() {
-        const QString f = ui->remoteFileEdit->text().trimmed();
-        const QString m = ui->fileModeEdit->text().trimmed().isEmpty() ? QStringLiteral("0755") : ui->fileModeEdit->text().trimmed();
-        if (f.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入要修改权限的远端路径。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("file") << QStringLiteral("-a") << QStringLiteral("path=%1 mode=%2").arg(f, m), workspace());
+        const QString remote = ui->chmodRemoteEdit->text().trimmed();
+        const QString mode = ui->chmodModeEdit->text().trimmed().isEmpty() ? QStringLiteral("0755") : ui->chmodModeEdit->text().trimmed();
+        if (remote.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入要修改权限的远端路径。")); return; }
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("file"), QStringLiteral("path=%1 mode=%2").arg(remote, mode)), workspace());
     });
 
     // 2. 常用操作 - 软件包
@@ -208,22 +222,22 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->pkgInstallBtn, &QPushButton::clicked, this, [this]() {
         const QString pkg = ui->pkgNameEdit->text().trimmed();
         if (pkg.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入软件包名称。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("package") << QStringLiteral("-a") << QStringLiteral("name=%1 state=present").arg(pkg), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("package"), QStringLiteral("name=%1 state=present").arg(pkg)), workspace());
     });
     connect(ui->pkgRemoveBtn, &QPushButton::clicked, this, [this]() {
         const QString pkg = ui->pkgNameEdit->text().trimmed();
         if (pkg.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入软件包名称。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("package") << QStringLiteral("-a") << QStringLiteral("name=%1 state=absent").arg(pkg), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("package"), QStringLiteral("name=%1 state=absent").arg(pkg)), workspace());
     });
     connect(ui->pkgAptInstallBtn, &QPushButton::clicked, this, [this]() {
         const QString pkg = ui->pkgNameEdit->text().trimmed();
         if (pkg.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入软件包名称。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("apt") << QStringLiteral("-a") << QStringLiteral("name=%1 state=present update_cache=yes").arg(pkg), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("apt"), QStringLiteral("name=%1 state=present update_cache=yes").arg(pkg)), workspace());
     });
     connect(ui->pkgYumInstallBtn, &QPushButton::clicked, this, [this]() {
         const QString pkg = ui->pkgNameEdit->text().trimmed();
         if (pkg.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入软件包名称。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("yum") << QStringLiteral("-a") << QStringLiteral("name=%1 state=present").arg(pkg), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("yum"), QStringLiteral("name=%1 state=present").arg(pkg)), workspace());
     });
 
     // 3. 批量部署
@@ -231,15 +245,17 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->runPlaybookBtn, &QPushButton::clicked, this, [this]() {
         const QString pb = ui->playbookCombo->currentText().trimmed();
         if (pb.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请选择有效的 Playbook 剧本文件。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible-playbook"), QStringList() << commonArgs() << pb, workspace());
+        runInExternalTerminal(QStringLiteral("ansible-playbook"), playbookArgs(pb), workspace());
     });
     connect(ui->pingTestBtn, &QPushButton::clicked, this, [this]() {
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("ping"), workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("ping")), workspace());
     });
     connect(ui->syntaxCheckBtn, &QPushButton::clicked, this, [this]() {
         const QString pb = ui->playbookCombo->currentText().trimmed();
         if (pb.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请先选择一个待检查语法的 Playbook 文件。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible-playbook"), QStringList() << commonArgs() << pb << QStringLiteral("--syntax-check"), workspace());
+        QStringList args = playbookArgs(pb);
+        args << QStringLiteral("--syntax-check");
+        runInExternalTerminal(QStringLiteral("ansible-playbook"), args, workspace());
     });
 
     // 4. 批量命令
@@ -248,7 +264,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->runBatchCmdBtn, &QPushButton::clicked, this, [this]() {
         const QString cmd = ui->batchCmdEdit->toPlainText().trimmed();
         if (cmd.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请输入要批量执行的命令内容。")); return; }
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << ui->moduleCombo->currentText() << QStringLiteral("-a") << cmd, workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(ui->moduleCombo->currentText(), cmd), workspace());
     });
 
     // 5. 批量上传
@@ -263,7 +279,7 @@ MainWindow::MainWindow(QWidget *parent)
         const QString dest = ui->uploadDestEdit->text().trimmed();
         if (src.isEmpty() || dest.isEmpty()) { QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请完整填写本地文件路径和远端目标路径。")); return; }
         const QString copyArgs = QStringLiteral("src=%1 dest=%2").arg(src, dest);
-        runInExternalTerminal(QStringLiteral("ansible"), QStringList() << group() << commonArgs() << QStringLiteral("-m") << QStringLiteral("copy") << QStringLiteral("-a") << copyArgs, workspace());
+        runInExternalTerminal(QStringLiteral("ansible"), ansibleArgs(QStringLiteral("copy"), copyArgs), workspace());
     });
 
     // 6. 日志与停止任务
@@ -346,7 +362,9 @@ void MainWindow::setupUiStyles()
 
         "QTableWidget { border: 1px solid #cbd5e1; border-radius: 6px; background-color: #ffffff; gridline-color: #e2e8f0; selection-background-color: #dbeafe; selection-color: #1e293b; }"
         "QHeaderView::section { background-color: #f1f5f9; color: #334155; font-weight: bold; border: none; border-right: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 6px; }"
-        "QPlainTextEdit#logEdit { background-color: #0f172a; color: #e2e8f0; font-family: 'Noto Sans Mono', 'DejaVu Sans Mono', 'Consolas', monospace; font-size: 12px; border: 1px solid #1e293b; border-radius: 6px; }"
+        "QPlainTextEdit#logEdit { background-color: #ffffff; color: #1e293b; font-family: 'Noto Sans Mono', 'DejaVu Sans Mono', 'Consolas', 'Courier New', monospace; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; selection-background-color: #bfdbfe; selection-color: #0f172a; }"
+        "QPushButton#deleteFileBtn { background-color: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; font-weight: bold; border-radius: 6px; }"
+        "QPushButton#deleteFileBtn:hover { background-color: #fecaca; border-color: #f87171; }"
     );
     this->setStyleSheet(qss);
 }
@@ -495,12 +513,12 @@ QString MainWindow::ansiToHtml(const QString &text) const
 {
     QString html = text.toHtmlEscaped();
 
-    html.replace(QRegularExpression(QStringLiteral("\033\\[0?32m")), QStringLiteral("<span style=\"color:#22c55e;font-weight:bold;\">"));
-    html.replace(QRegularExpression(QStringLiteral("\033\\[0?31m")), QStringLiteral("<span style=\"color:#ef4444;font-weight:bold;\">"));
-    html.replace(QRegularExpression(QStringLiteral("\033\\[0?33m")), QStringLiteral("<span style=\"color:#f59e0b;font-weight:bold;\">"));
-    html.replace(QRegularExpression(QStringLiteral("\033\\[0?36m")), QStringLiteral("<span style=\"color:#06b6d4;font-weight:bold;\">"));
-    html.replace(QRegularExpression(QStringLiteral("\033\\[0?34m")), QStringLiteral("<span style=\"color:#3b82f6;font-weight:bold;\">"));
-    html.replace(QRegularExpression(QStringLiteral("\033\\[0?35m")), QStringLiteral("<span style=\"color:#a855f7;font-weight:bold;\">"));
+    html.replace(QRegularExpression(QStringLiteral("\033\\[0?32m")), QStringLiteral("<span style=\"color:#15803d;font-weight:bold;\">"));
+    html.replace(QRegularExpression(QStringLiteral("\033\\[0?31m")), QStringLiteral("<span style=\"color:#dc2626;font-weight:bold;\">"));
+    html.replace(QRegularExpression(QStringLiteral("\033\\[0?33m")), QStringLiteral("<span style=\"color:#b45309;font-weight:bold;\">"));
+    html.replace(QRegularExpression(QStringLiteral("\033\\[0?36m")), QStringLiteral("<span style=\"color:#0369a1;font-weight:bold;\">"));
+    html.replace(QRegularExpression(QStringLiteral("\033\\[0?34m")), QStringLiteral("<span style=\"color:#1d4ed8;font-weight:bold;\">"));
+    html.replace(QRegularExpression(QStringLiteral("\033\\[0?35m")), QStringLiteral("<span style=\"color:#7e22ce;font-weight:bold;\">"));
     html.replace(QRegularExpression(QStringLiteral("\033\\[0?1m")),  QStringLiteral("<span style=\"font-weight:bold;\">"));
     html.replace(QRegularExpression(QStringLiteral("\033\\[0?m")),   QStringLiteral("</span>"));
     html.replace(QRegularExpression(QStringLiteral("\033\\[[0-9;]*m")), QString());
@@ -548,9 +566,10 @@ void MainWindow::updatePreview()
             preview = QStringLiteral("ansible -i %1 %2 %3 -m shell -a 'ps -ef | grep %4'")
                           .arg(inventory(), group(), limit().isEmpty() ? QString() : QStringLiteral("-l ") + limit(), kw.isEmpty() ? QStringLiteral("nginx") : kw);
         } else if (subTab == 3) { // 文件操作
-            const QString f = ui->remoteFileEdit->text().trimmed();
-            preview = QStringLiteral("ansible -i %1 %2 %3 -m fetch -a 'src=%4 dest=./'")
-                          .arg(inventory(), group(), limit().isEmpty() ? QString() : QStringLiteral("-l ") + limit(), f.isEmpty() ? QStringLiteral("/tmp/test.txt") : f);
+            const QString fr = ui->fetchRemoteEdit->text().trimmed();
+            const QString fl = ui->fetchLocalEdit->text().trimmed().isEmpty() ? QStringLiteral("./downloads/") : ui->fetchLocalEdit->text().trimmed();
+            preview = QStringLiteral("ansible -i %1 %2 %3 -m fetch -a 'src=%4 dest=%5 flat=yes'")
+                          .arg(inventory(), group(), limit().isEmpty() ? QString() : QStringLiteral("-l ") + limit(), fr.isEmpty() ? QStringLiteral("/var/log/messages") : fr, fl);
         } else if (subTab == 4) { // 软件包
             const QString pkg = ui->pkgNameEdit->text().trimmed();
             preview = QStringLiteral("ansible -i %1 %2 %3 -m package -a 'name=%4 state=present'")
@@ -585,6 +604,38 @@ QStringList MainWindow::commonArgs() const
     QStringList args;
     const QString inv = inventory();
     if (!inv.isEmpty()) args << QStringLiteral("-i") << inv;
+    const QString lim = limit();
+    if (!lim.isEmpty()) args << QStringLiteral("-l") << lim;
+    const QString extra = extraArgs();
+    if (!extra.isEmpty()) args << splitArgs(extra);
+    return args;
+}
+
+QStringList MainWindow::ansibleArgs(const QString &module, const QString &moduleArgs) const
+{
+    QStringList args;
+    const QString inv = inventory();
+    if (!inv.isEmpty()) args << QStringLiteral("-i") << inv;
+    args << (group().isEmpty() ? QStringLiteral("all") : group());
+    if (!module.isEmpty()) {
+        args << QStringLiteral("-m") << module;
+        if (!moduleArgs.isEmpty()) {
+            args << QStringLiteral("-a") << moduleArgs;
+        }
+    }
+    const QString lim = limit();
+    if (!lim.isEmpty()) args << QStringLiteral("-l") << lim;
+    const QString extra = extraArgs();
+    if (!extra.isEmpty()) args << splitArgs(extra);
+    return args;
+}
+
+QStringList MainWindow::playbookArgs(const QString &playbook) const
+{
+    QStringList args;
+    const QString inv = inventory();
+    if (!inv.isEmpty()) args << QStringLiteral("-i") << inv;
+    args << playbook;
     const QString lim = limit();
     if (!lim.isEmpty()) args << QStringLiteral("-l") << lim;
     const QString extra = extraArgs();
@@ -728,17 +779,20 @@ void MainWindow::runProcess(const QString &program, const QStringList &arguments
 void MainWindow::runInExternalTerminal(const QString &program, const QStringList &arguments, const QString &workingDirectory)
 {
     const QString token = QString::number(QDateTime::currentMSecsSinceEpoch());
-    const QString scriptPath = QDir::temp().filePath(QStringLiteral("ansible-pilot-%1.sh").arg(token));
-    const QString logPath = QDir::temp().filePath(QStringLiteral("ansible-pilot-%1.log").arg(token));
+    const QString scriptPath = QDir::temp().filePath(QStringLiteral("ansible-pilot-run-%1.sh").arg(token));
+    const QString logPath = QDir::temp().filePath(QStringLiteral("ansible-pilot-output-%1.log").arg(token));
     const QString statusPath = QDir::temp().filePath(QStringLiteral("ansible-pilot-%1.status").arg(token));
     const QString pidPath = QDir::temp().filePath(QStringLiteral("ansible-pilot-%1.pid").arg(token));
 
-    QString fullCmd = program;
+    QStringList tokenList;
+    tokenList << shellQuote(program);
     for (const QString &arg : arguments) {
-        fullCmd += QLatin1Char(' ') + shellQuote(arg);
+        tokenList << shellQuote(arg);
     }
+    const QString execCommandStr = tokenList.join(QLatin1Char(' '));
+    const QString displayCmd = program + QLatin1Char(' ') + arguments.join(QLatin1Char(' '));
 
-    const int historyRow = recordHistoryStart(fullCmd);
+    const int historyRow = recordHistoryStart(displayCmd);
 
     QFile scriptFile(scriptPath);
     if (!scriptFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -751,21 +805,22 @@ void MainWindow::runInExternalTerminal(const QString &program, const QStringList
     out << "#!/usr/bin/env bash\n";
     out << "cd " << shellQuote(workingDirectory) << " || exit 1\n";
     out << "echo $$ > " << shellQuote(pidPath) << "\n";
-    out << ": > " << shellQuote(logPath) << "\n";
-    out << "echo '============================================================'\n";
-    out << "echo ' Ansible 批量运维工具 - 终端执行窗口'\n";
-    out << "echo ' 执行命令: " << fullCmd.replace(QLatin1Char('\''), QStringLiteral("\\'")) << "'\n";
-    out << "echo '============================================================'\n\n";
+    out << ": > " << shellQuote(logPath) << "\n\n";
+    out << "echo \"========== AnsiblePilot 终端执行 ==========\"\n";
+    out << "echo \"工作目录：$(pwd)\"\n";
+    out << "echo \"当前用户：$(whoami)\"\n";
+    out << "echo \"PID：$$\"\n";
+    out << "echo \"---------- Ansible 命令 ----------\"\n";
+    out << "echo " << shellQuote(displayCmd) << "\n";
+    out << "echo \"\"\n\n";
     out << "export ANSIBLE_FORCE_COLOR=true\n";
-    out << "export PYTHONUNBUFFERED=1\n";
-    out << fullCmd << " 2>&1 | tee -a " << shellQuote(logPath) << "\n";
-    out << "EC=${PIPESTATUS[0]}\n";
-    out << "echo $EC > " << shellQuote(statusPath) << "\n";
-    out << "\necho ''\n";
-    out << "echo '============================================================'\n";
-    out << "echo \"任务已执行完毕，退出代码: $EC\"\n";
-    out << "echo '按 Enter 回车键关闭当前窗口...'\n";
-    out << "echo '============================================================'\n";
+    out << "export PYTHONUNBUFFERED=1\n\n";
+    out << execCommandStr << " 2>&1 | tee -a " << shellQuote(logPath) << "\n";
+    out << "EXIT_CODE=${PIPESTATUS[0]}\n";
+    out << "echo $EXIT_CODE > " << shellQuote(statusPath) << "\n\n";
+    out << "echo \"\"\n";
+    out << "echo \"任务结束，退出码：$EXIT_CODE\"\n";
+    out << "echo \"按回车关闭终端...\"\n";
     out << "read -r\n";
     scriptFile.close();
 
@@ -774,9 +829,10 @@ void MainWindow::runInExternalTerminal(const QString &program, const QStringList
                           QFile::ReadGroup | QFile::ExeGroup |
                           QFile::ReadOther | QFile::ExeOther);
 
-    appendLog(QStringLiteral("\n------------------------------------------------------------\n"));
-    appendLog(QStringLiteral("[拉起外部终端] 命令: %1\n").arg(fullCmd));
-    appendLog(QStringLiteral("------------------------------------------------------------\n"));
+    const QString timeStr = QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd HH:mm:ss"));
+    appendLog(QStringLiteral("[%1] 在外部终端执行：%2\n").arg(timeStr, execCommandStr));
+    appendLog(QStringLiteral("终端脚本：%1\n").arg(scriptPath));
+    appendLog(QStringLiteral("同步日志：%1\n").arg(logPath));
 
     ExternalRun run;
     run.logPath = logPath;
@@ -787,19 +843,26 @@ void MainWindow::runInExternalTerminal(const QString &program, const QStringList
     run.startTime = QDateTime::currentDateTime();
     activeRuns.append(run);
 
-    if (!QProcess::startDetached(QStringLiteral("x-terminal-emulator"), QStringList() << QStringLiteral("-e") << scriptPath)) {
-        if (!QProcess::startDetached(QStringLiteral("mate-terminal"), QStringList() << QStringLiteral("-e") << scriptPath)) {
-            if (!QProcess::startDetached(QStringLiteral("gnome-terminal"), QStringList() << QStringLiteral("--") << scriptPath)) {
-                if (!QProcess::startDetached(QStringLiteral("kylin-terminal"), QStringList() << QStringLiteral("-e") << scriptPath)) {
-                    if (!QProcess::startDetached(QStringLiteral("konsole"), QStringList() << QStringLiteral("-e") << scriptPath)) {
-                        if (!QProcess::startDetached(QStringLiteral("xterm"), QStringList() << QStringLiteral("-e") << scriptPath)) {
-                            appendLog(QStringLiteral("[提示] 未检测到独立图形终端，已自动切换至内置捕获模式执行。\n"));
-                            runProcess(QStringLiteral("bash"), QStringList() << scriptPath, workingDirectory);
-                        }
-                    }
-                }
-            }
-        }
+    QString openedTerminal;
+    if (QProcess::startDetached(QStringLiteral("x-terminal-emulator"), QStringList() << QStringLiteral("-e") << scriptPath)) {
+        openedTerminal = QStringLiteral("x-terminal-emulator");
+    } else if (QProcess::startDetached(QStringLiteral("mate-terminal"), QStringList() << QStringLiteral("-e") << scriptPath)) {
+        openedTerminal = QStringLiteral("mate-terminal");
+    } else if (QProcess::startDetached(QStringLiteral("gnome-terminal"), QStringList() << QStringLiteral("--") << scriptPath)) {
+        openedTerminal = QStringLiteral("gnome-terminal");
+    } else if (QProcess::startDetached(QStringLiteral("kylin-terminal"), QStringList() << QStringLiteral("-e") << scriptPath)) {
+        openedTerminal = QStringLiteral("kylin-terminal");
+    } else if (QProcess::startDetached(QStringLiteral("konsole"), QStringList() << QStringLiteral("-e") << scriptPath)) {
+        openedTerminal = QStringLiteral("konsole");
+    } else if (QProcess::startDetached(QStringLiteral("xterm"), QStringList() << QStringLiteral("-e") << scriptPath)) {
+        openedTerminal = QStringLiteral("xterm");
+    } else {
+        appendLog(QStringLiteral("[提示] 未检测到独立图形终端，已自动切换至内置捕获模式执行。\n"));
+        runProcess(QStringLiteral("bash"), QStringList() << scriptPath, workingDirectory);
+    }
+
+    if (!openedTerminal.isEmpty()) {
+        appendLog(QStringLiteral("已打开外部终端：%1\n").arg(openedTerminal));
     }
 }
 
@@ -827,7 +890,7 @@ void MainWindow::pollExternalTerminalOutput()
             statusFile.close();
 
             qint64 durationMs = run.startTime.msecsTo(QDateTime::currentDateTime());
-            appendLog(QStringLiteral("\n[终端任务已完成] 退出代码: %1 (耗时 %2 秒)\n").arg(exitCode).arg(durationMs / 1000.0, 0, 'f', 2));
+            appendLog(QStringLiteral("\n外部终端任务结束，退出码：%1\n").arg(exitCode));
             recordHistoryFinish(run.historyRow, exitCode == QStringLiteral("0") ? QStringLiteral("成功") : QStringLiteral("失败"), exitCode, durationMs);
 
             activeRuns.removeAt(i);

@@ -462,60 +462,163 @@
              <number>8</number>
             </property>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayoutFileRemote">
+             <layout class="QHBoxLayout" name="horizontalLayoutFetch">
               <item>
-               <widget class="QLabel" name="labelRemoteFile">
+               <widget class="QLabel" name="labelFetchRemote">
                 <property name="text">
-                 <string>远端路径:</string>
+                 <string>下载 远端:</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="remoteFileEdit">
+               <widget class="QLineEdit" name="fetchRemoteEdit">
                 <property name="placeholderText">
-                 <string>远端文件或目录路径，例如 /tmp/test.txt</string>
+                 <string>远端文件路径，例如 /var/log/messages</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="labelFetchLocal">
+                <property name="text">
+                 <string>本地:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="fetchLocalEdit">
+                <property name="text">
+                 <string>./downloads/</string>
+                </property>
+                <property name="placeholderText">
+                 <string>本地保存目录，例如 /tmp/ 或 ./downloads/</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="selectFetchLocalBtn">
+                <property name="text">
+                 <string>选择本地目录</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="fetchFileBtn">
                 <property name="text">
-                 <string>下载文件 (fetch)</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="deleteFileBtn">
-                <property name="text">
-                 <string>删除文件 (absent)</string>
+                 <string>从远端下载 (fetch)</string>
                 </property>
                </widget>
               </item>
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayoutFileDir">
+             <layout class="QHBoxLayout" name="horizontalLayoutDelete">
               <item>
-               <widget class="QLabel" name="labelDirPerm">
+               <widget class="QLabel" name="labelDelete">
                 <property name="text">
-                 <string>权限/属组:</string>
+                 <string>删除 远端:</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="fileModeEdit">
+               <widget class="QLineEdit" name="deleteRemoteEdit">
+                <property name="placeholderText">
+                 <string>远端待删除的文件或目录绝对路径，例如 /tmp/junk.log</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="deleteFileBtn">
+                <property name="text">
+                 <string>删除远端文件/目录 (absent)</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayoutMkdir">
+              <item>
+               <widget class="QLabel" name="labelMkdir">
+                <property name="text">
+                 <string>建目录 远端:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="mkdirRemoteEdit">
+                <property name="placeholderText">
+                 <string>远端待创建的目录路径，例如 /opt/myapp</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="labelMkdirMode">
+                <property name="text">
+                 <string>权限模式:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="mkdirModeEdit">
                 <property name="text">
                  <string>0755</string>
                 </property>
                 <property name="placeholderText">
                  <string>例如 0755</string>
                 </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>80</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="mkdirBtn">
                 <property name="text">
-                 <string>创建目录 (mkdir)</string>
+                 <string>创建远端目录 (mkdir)</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayoutChmod">
+              <item>
+               <widget class="QLabel" name="labelChmod">
+                <property name="text">
+                 <string>修改权限 远端:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="chmodRemoteEdit">
+                <property name="placeholderText">
+                 <string>远端待修改权限的文件或目录路径</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="labelChmodMode">
+                <property name="text">
+                 <string>模式:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="chmodModeEdit">
+                <property name="text">
+                 <string>0755</string>
+                </property>
+                <property name="placeholderText">
+                 <string>例如 0755</string>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>80</width>
+                  <height>16777215</height>
+                 </size>
                 </property>
                </widget>
               </item>

@@ -49,6 +49,8 @@ private:
     QString limit() const;
     QString extraArgs() const;
     QStringList commonArgs() const;
+    QStringList ansibleArgs(const QString &module = QString(), const QString &moduleArgs = QString()) const;
+    QStringList playbookArgs(const QString &playbook) const;
     QStringList splitArgs(const QString &text) const;
 
     Ui::MainWindow *ui;
