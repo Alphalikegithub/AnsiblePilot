@@ -6,15 +6,696 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>1100</width>
+    <height>750</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>AnsiblePilot - 运维自动化控制台</string>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
-  <widget class="QMenuBar" name="menubar"/>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayoutMain">
+    <property name="spacing">
+     <number>8</number>
+    </property>
+    <property name="leftMargin">
+     <number>10</number>
+    </property>
+    <property name="topMargin">
+     <number>10</number>
+    </property>
+    <property name="rightMargin">
+     <number>10</number>
+    </property>
+    <property name="bottomMargin">
+     <number>10</number>
+    </property>
+    <item>
+     <widget class="QGroupBox" name="groupEnvironment">
+      <property name="title">
+       <string>环境与全局参数配置</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayoutEnv">
+       <property name="spacing">
+        <number>6</number>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="labelWorkspace">
+         <property name="text">
+          <string>工作空间:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="QLineEdit" name="workspaceEdit"/>
+       </item>
+       <item row="0" column="3">
+        <widget class="QPushButton" name="browseWorkspaceBtn">
+         <property name="text">
+          <string>浏览目录...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4">
+        <widget class="QPushButton" name="scanBtn">
+         <property name="text">
+          <string>重新扫描</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="labelHosts">
+         <property name="text">
+          <string>Hosts 源文件:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="inventoryCombo">
+         <property name="editable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QLabel" name="labelGroup">
+         <property name="text">
+          <string>目标主机组:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3" colspan="2">
+        <widget class="QComboBox" name="groupCombo">
+         <property name="editable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="labelLimit">
+         <property name="text">
+          <string>限制主机 (--limit):</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="limitEdit">
+         <property name="placeholderText">
+          <string>可选，如 172.10.10.11 或 host1,host2</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QLabel" name="labelExtra">
+         <property name="text">
+          <string>额外参数:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3" colspan="2">
+        <widget class="QLineEdit" name="extraArgsEdit">
+         <property name="placeholderText">
+          <string>可选附加参数，如 -v, -C (check mode)</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTabWidget" name="actionTabs">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tabQuickOps">
+       <attribute name="title">
+        <string>常用快捷运维</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayoutQuick">
+        <item>
+         <layout class="QGridLayout" name="gridLayoutQuick">
+          <property name="spacing">
+           <number>8</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QPushButton" name="pingBtn">
+            <property name="text">
+             <string>连通性测试 (Ping)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QPushButton" name="factsBtn">
+            <property name="text">
+             <string>采集主机事实 (Setup)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="uptimeBtn">
+            <property name="text">
+             <string>检查运行时间 (Uptime)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QPushButton" name="diskBtn">
+            <property name="text">
+             <string>检查磁盘空间 (df -h)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QPushButton" name="memoryBtn">
+            <property name="text">
+             <string>检查内存使用 (free -m)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QPushButton" name="checkYamlBtn">
+            <property name="text">
+             <string>语法检查 (Syntax-Check)</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <spacer name="verticalSpacerQuick">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>10</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tabPlaybook">
+       <attribute name="title">
+        <string>Playbook 剧本部署</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayoutPlaybook">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayoutPlaybookFile">
+          <item>
+           <widget class="QLabel" name="labelPlaybookFile">
+            <property name="text">
+             <string>剧本文件 (*.yaml / *.yml):</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="playbookCombo">
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayoutPlaybookBtns">
+          <item>
+           <widget class="QPushButton" name="runPlaybookTermBtn">
+            <property name="text">
+             <string>外部终端执行 (推荐)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="runPlaybookBgBtn">
+            <property name="text">
+             <string>内置静默执行</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacerPb">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <spacer name="verticalSpacerPb">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>10</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tabCommand">
+       <attribute name="title">
+        <string>批量 Ad-hoc 命令</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayoutCmd">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayoutModule">
+          <item>
+           <widget class="QLabel" name="labelModule">
+            <property name="text">
+             <string>执行模块:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="moduleCombo">
+            <item>
+             <property name="text">
+              <string>command</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>shell</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>raw</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>script</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacerMod">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayoutCmdContent">
+          <item>
+           <widget class="QLabel" name="labelCmd">
+            <property name="text">
+             <string>命令内容:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPlainTextEdit" name="commandEdit">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>60</height>
+             </size>
+            </property>
+            <property name="placeholderText">
+             <string>输入远程执行的 Shell 命令，例如: systemctl status nginx</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayoutCmdBtns">
+          <item>
+           <widget class="QPushButton" name="runCmdTermBtn">
+            <property name="text">
+             <string>终端执行命令</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="runCmdBgBtn">
+            <property name="text">
+             <string>内置执行</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacerCmd">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tabFile">
+       <attribute name="title">
+        <string>批量文件分发</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayoutFile">
+        <item>
+         <layout class="QGridLayout" name="gridLayoutFile">
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelLocalPath">
+            <property name="text">
+             <string>本地源路径:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="localPathEdit">
+            <property name="placeholderText">
+             <string>本地文件或目录路径</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="browseLocalFileBtn">
+            <property name="text">
+             <string>选择文件...</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="labelRemotePath">
+            <property name="text">
+             <string>远程目标路径:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" colspan="2">
+           <widget class="QLineEdit" name="remotePathEdit">
+            <property name="text">
+             <string>/tmp/</string>
+            </property>
+            <property name="placeholderText">
+             <string>远程绝对路径，如 /tmp/ 或 /opt/app/</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayoutFileBtns">
+          <item>
+           <widget class="QPushButton" name="runCopyTermBtn">
+            <property name="text">
+             <string>批量分发文件</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacerFile">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="groupPreview">
+      <property name="title">
+       <string>即将执行的 Ansible 完整指令预览</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayoutPreview">
+       <property name="spacing">
+        <number>4</number>
+       </property>
+       <property name="leftMargin">
+        <number>6</number>
+       </property>
+       <property name="topMargin">
+        <number>6</number>
+       </property>
+       <property name="rightMargin">
+        <number>6</number>
+       </property>
+       <property name="bottomMargin">
+        <number>6</number>
+       </property>
+       <item>
+        <widget class="QPlainTextEdit" name="previewEdit">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>55</height>
+          </size>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayoutPreviewTool">
+         <item>
+          <spacer name="horizontalSpacerPrev">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="copyPreviewBtn">
+           <property name="text">
+            <string>复制完整指令</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTabWidget" name="bottomTabs">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tabLogs">
+       <attribute name="title">
+        <string>实时控制台输出</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayoutLogs">
+        <property name="spacing">
+         <number>4</number>
+        </property>
+        <property name="leftMargin">
+         <number>6</number>
+        </property>
+        <property name="topMargin">
+         <number>6</number>
+        </property>
+        <property name="rightMargin">
+         <number>6</number>
+        </property>
+        <property name="bottomMargin">
+         <number>6</number>
+        </property>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayoutLogTools">
+          <item>
+           <widget class="QLineEdit" name="searchLogEdit">
+            <property name="placeholderText">
+             <string>搜索日志关键词...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="searchBtn">
+            <property name="text">
+             <string>搜索</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="autoScrollCheck">
+            <property name="text">
+             <string>自动滚屏</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacerLog">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="clearLogBtn">
+            <property name="text">
+             <string>清空日志</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="copyLogBtn">
+            <property name="text">
+             <string>复制全部</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="exportLogBtn">
+            <property name="text">
+             <string>导出日志...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="stopButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>终止当前内置任务</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPlainTextEdit" name="logEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tabHistory">
+       <attribute name="title">
+        <string>任务执行历史</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayoutHistory">
+        <property name="leftMargin">
+         <number>6</number>
+        </property>
+        <property name="topMargin">
+         <number>6</number>
+        </property>
+        <property name="rightMargin">
+         <number>6</number>
+        </property>
+        <property name="bottomMargin">
+         <number>6</number>
+        </property>
+        <item>
+         <widget class="QTableWidget" name="historyTable">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <column>
+           <property name="text">
+            <string>时间</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>指令内容</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>执行状态</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>退出代码</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>耗时</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>操作</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1100</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>

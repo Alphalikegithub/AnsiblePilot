@@ -1,15 +1,14 @@
 #pragma once
 
-#include <QList>
 #include <QMainWindow>
 #include <QProcess>
 #include <QStringList>
+#include <QDateTime>
 
-class QComboBox;
-class QLineEdit;
-class QPushButton;
-class QPlainTextEdit;
-class QTableWidget;
+namespace Ui {
+class MainWindow;
+}
+
 class QTimer;
 
 class MainWindow : public QMainWindow
@@ -18,47 +17,51 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
+    ~MainWindow() override;
+
+private slots:
+    void onTabChanged(int index);
+    void onSearchLog(const QString &keyword);
+    void clearLogs();
+    void exportLogs();
+    void copyLogs();
+    void onInventorySelected(int index);
 
 private:
-    void buildUi();
     void scanFiles();
+    void updateInventoryGroups();
     void runProcess(const QString &program, const QStringList &arguments, const QString &workingDirectory);
     void runInExternalTerminal(const QString &program, const QStringList &arguments, const QString &workingDirectory);
     void appendLog(const QString &message);
     void updatePreview();
     void pollExternalTerminalOutput();
     int recordHistoryStart(const QString &command);
-    void recordHistoryFinish(int row, const QString &status, const QString &exitCode);
+    void recordHistoryFinish(int row, const QString &status, const QString &exitCode, qint64 durationMs = 0);
     bool ensureSharedMemoryAvailable();
+    void cleanupOldTempFiles();
+    
+    QString ansiToHtml(const QString &text) const;
     QString shellQuote(const QString &text) const;
     QString workspace() const;
     QString inventory() const;
     QString group() const;
+    QString limit() const;
+    QString extraArgs() const;
     QStringList commonArgs() const;
     QStringList splitArgs(const QString &text) const;
 
-    QLineEdit *workspaceEdit = nullptr;
-    QComboBox *inventoryCombo = nullptr;
-    QComboBox *groupCombo = nullptr;
-    QComboBox *playbookCombo = nullptr;
-    QLineEdit *limitEdit = nullptr;
-    QLineEdit *extraArgsEdit = nullptr;
-    QComboBox *moduleCombo = nullptr;
-    QPlainTextEdit *commandEdit = nullptr;
-    QLineEdit *localPathEdit = nullptr;
-    QLineEdit *remotePathEdit = nullptr;
-    QPlainTextEdit *previewEdit = nullptr;
-    QPlainTextEdit *logEdit = nullptr;
-    QPushButton *stopButton = nullptr;
+    Ui::MainWindow *ui;
+
     QProcess *process = nullptr;
     QTimer *externalLogTimer = nullptr;
+
     struct ExternalRun {
         QString logPath;
         QString statusPath;
         QString pidPath;
         qint64 logOffset = 0;
         int historyRow = -1;
+        QDateTime startTime;
     };
     QList<ExternalRun> activeRuns;
-    QTableWidget *historyTable = nullptr;
 };
