@@ -795,33 +795,37 @@ void MainWindow::runInExternalTerminal(const QString &program, const QStringList
     const int historyRow = recordHistoryStart(displayCmd);
 
     QFile scriptFile(scriptPath);
-    if (!scriptFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    if (!scriptFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         appendLog(QStringLiteral("[错误] 无法创建临时脚本: %1\n").arg(scriptPath));
         recordHistoryFinish(historyRow, QStringLiteral("失败"), QStringLiteral("-1"));
         return;
     }
 
-    QTextStream out(&scriptFile);
-    out << "#!/usr/bin/env bash\n";
-    out << "cd " << shellQuote(workingDirectory) << " || exit 1\n";
-    out << "echo $$ > " << shellQuote(pidPath) << "\n";
-    out << ": > " << shellQuote(logPath) << "\n\n";
-    out << "echo \"========== AnsiblePilot 终端执行 ==========\"\n";
-    out << "echo \"工作目录：$(pwd)\"\n";
-    out << "echo \"当前用户：$(whoami)\"\n";
-    out << "echo \"PID：$$\"\n";
-    out << "echo \"---------- Ansible 命令 ----------\"\n";
-    out << "echo " << shellQuote(displayCmd) << "\n";
-    out << "echo \"\"\n\n";
-    out << "export ANSIBLE_FORCE_COLOR=true\n";
-    out << "export PYTHONUNBUFFERED=1\n\n";
-    out << execCommandStr << " 2>&1 | tee -a " << shellQuote(logPath) << "\n";
-    out << "EXIT_CODE=${PIPESTATUS[0]}\n";
-    out << "echo $EXIT_CODE > " << shellQuote(statusPath) << "\n\n";
-    out << "echo \"\"\n";
-    out << "echo \"任务结束，退出码：$EXIT_CODE\"\n";
-    out << "echo \"按回车关闭终端...\"\n";
-    out << "read -r\n";
+    QString scriptContent;
+    scriptContent += QStringLiteral("#!/usr/bin/env bash\n");
+    scriptContent += QStringLiteral("export LANG=\"${LANG:-zh_CN.UTF-8}\"\n");
+    scriptContent += QStringLiteral("export LC_ALL=\"${LC_ALL:-zh_CN.UTF-8}\"\n");
+    scriptContent += QStringLiteral("cd ") + shellQuote(workingDirectory) + QStringLiteral(" || exit 1\n");
+    scriptContent += QStringLiteral("echo $$ > ") + shellQuote(pidPath) + QStringLiteral("\n");
+    scriptContent += QStringLiteral(": > ") + shellQuote(logPath) + QStringLiteral("\n\n");
+    scriptContent += QStringLiteral("echo \"========== AnsiblePilot 终端执行 ==========\"\n");
+    scriptContent += QStringLiteral("echo \"工作目录：$(pwd)\"\n");
+    scriptContent += QStringLiteral("echo \"当前用户：$(whoami)\"\n");
+    scriptContent += QStringLiteral("echo \"PID：$$\"\n");
+    scriptContent += QStringLiteral("echo \"---------- Ansible 命令 ----------\"\n");
+    scriptContent += QStringLiteral("echo ") + shellQuote(displayCmd) + QStringLiteral("\n");
+    scriptContent += QStringLiteral("echo \"\"\n\n");
+    scriptContent += QStringLiteral("export ANSIBLE_FORCE_COLOR=true\n");
+    scriptContent += QStringLiteral("export PYTHONUNBUFFERED=1\n\n");
+    scriptContent += execCommandStr + QStringLiteral(" 2>&1 | tee -a ") + shellQuote(logPath) + QStringLiteral("\n");
+    scriptContent += QStringLiteral("EXIT_CODE=${PIPESTATUS[0]}\n");
+    scriptContent += QStringLiteral("echo $EXIT_CODE > ") + shellQuote(statusPath) + QStringLiteral("\n\n");
+    scriptContent += QStringLiteral("echo \"\"\n");
+    scriptContent += QStringLiteral("echo \"任务结束，退出码：$EXIT_CODE\"\n");
+    scriptContent += QStringLiteral("echo \"按回车关闭终端...\"\n");
+    scriptContent += QStringLiteral("read -r\n");
+
+    scriptFile.write(scriptContent.toUtf8());
     scriptFile.close();
 
     QFile::setPermissions(scriptPath,
