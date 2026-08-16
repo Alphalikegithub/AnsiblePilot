@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AnsiblePilotConfig>
+  <!-- 1. 热备对与服务器映射配置 -->
+  <PairIdInfos>
+    <PairIdInfo>
+      <pairid>1</pairid>
+      <servicename>实时数据交换服务器</servicename>
+      <softwarename>实时数据交换软件</softwarename>
+      <masterIp>172.10.10.1</masterIp>
+      <slaveIp>172.10.10.2</slaveIp>
+    </PairIdInfo>
+    <PairIdInfo>
+      <pairid>2</pairid>
+      <servicename>外测数据处理服务器</servicename>
+      <softwarename>外测数据处理软件</softwarename>
+      <masterIp>172.10.10.3</masterIp>
+      <slaveIp>172.10.10.4</slaveIp>
+    </PairIdInfo>
+    <PairIdInfo>
+      <pairid>3</pairid>
+      <servicename>GNSS差分处理服务器</servicename>
+      <softwarename>GNSS差分处理软件</softwarename>
+      <masterIp>172.10.10.5</masterIp>
+      <slaveIp>172.10.10.6</slaveIp>
+    </PairIdInfo>
+    <PairIdInfo>
+      <pairid>4</pairid>
+      <servicename>遥测预处理服务器</servicename>
+      <softwarename>遥测预处理软件</softwarename>
+      <masterIp>172.10.10.7</masterIp>
+      <slaveIp>172.10.10.8</slaveIp>
+    </PairIdInfo>
+    <PairIdInfo>
+      <pairid>5</pairid>
+      <servicename>实时综合处理服务器</servicename>
+      <softwarename>实时综合处理软件</softwarename>
+      <masterIp>172.10.10.9</masterIp>
+      <slaveIp>172.10.10.10</slaveIp>
+    </PairIdInfo>
+    <PairIdInfo>
+      <pairid>6</pairid>
+      <servicename>遥测全帧处理服务器</servicename>
+      <softwarename>遥测全帧处理软件</softwarename>
+      <masterIp>172.10.10.11</masterIp>
+      <slaveIp>172.10.10.12</slaveIp>
+    </PairIdInfo>
+    <PairIdInfo>
+      <pairid>7</pairid>
+      <servicename>指显数据收发服务器</servicename>
+      <softwarename>指显数据收发软件</softwarename>
+      <masterIp>172.10.10.17</masterIp>
+      <slaveIp>172.10.10.18</slaveIp>
+    </PairIdInfo>
+  </PairIdInfos>
+
+  <!-- 2. 进程与日志映射配置 -->
+  <Processes>
+    <Process name="实时数据交换软件" keyword="dods" logPath="/root/work/dods.log" pairId="1" desc="DODS核心进程">
+      <pidQuery>pgrep -f 'dods'</pidQuery>
+    </Process>
+    <Process name="外测数据处理软件" keyword="EMDPS" logPath="/root/work/EMDPS.log" pairId="2" desc="外测数据计算处理">
+      <pidQuery>pgrep -f 'EMDPS'</pidQuery>
+    </Process>
+    <Process name="GNSS差分处理软件" keyword="gnss" logPath="/root/work/gnss.log" pairId="3" desc="GNSS高精度差分">
+      <pidQuery>pgrep -f 'gnss'</pidQuery>
+    </Process>
+    <Process name="遥测预处理软件" keyword="pre" logPath="/root/work/pre.log" pairId="4" desc="遥测数据前置预处理">
+      <pidQuery>pgrep -f 'pre'</pidQuery>
+    </Process>
+    <Process name="实时综合处理软件" keyword="RIPS" logPath="/root/work/RIPS.log" pairId="5" desc="RIPS综合处理服务">
+      <pidQuery>pgrep -f 'RIPS'</pidQuery>
+    </Process>
+    <Process name="遥测全帧处理软件" keyword="go" logPath="/root/work/go.log" pairId="6" desc="全帧遥测数据解析">
+      <pidQuery>pgrep -f 'go'</pidQuery>
+    </Process>
+    <Process name="视频推流软件" keyword="mediamtx" logPath="/root/work/mediamtx.log" pairId="6" desc="MediaMTX流媒体服务">
+      <pidQuery>pgrep -f 'mediamtx'</pidQuery>
+    </Process>
+    <Process name="指显数据收发软件" keyword="dataBridge" logPath="/root/work/dataBridge.log" pairId="7" desc="指挥显示数据网桥">
+      <pidQuery>pgrep -f 'dataBridge'</pidQuery>
+    </Process>
+  </Processes>
+
+  <!-- 3. 常用脚本与命令配置 -->
+  <Commands>
+    <Category name="启动系统">
+      <Command name="启动DODS软件" script="/root/work/run_dods.sh" target="DODS软件" module="shell" desc="启动实时数据交换系统" pairId="1"/>
+      <Command name="启动外测数据处理软件" script="/root/work/run_EMDPS.sh" target="外测数据处理软件" module="shell" desc="启动外测计算服务" pairId="2"/>
+      <Command name="启动遥测全帧处理软件" script="/root/work/run_go.sh" target="遥测全帧处理软件" module="shell" desc="启动全帧遥测系统" pairId="6"/>
+      <Command name="启动遥测预处理软件" script="/root/work/run_pre.sh" target="遥测预处理软件" module="shell" desc="启动遥测预处理系统" pairId="4"/>
+      <Command name="启动GNSS差分处理软件" script="/root/work/run_gnss.sh" target="GNSS差分处理软件" module="shell" desc="启动GNSS差分系统" pairId="3"/>
+      <Command name="启动实时综合处理软件" script="/root/work/run_RIPS.sh" target="实时综合处理软件" module="shell" desc="启动RIPS综合处理" pairId="5"/>
+      <Command name="启动仿真软件" script="/root/work/run_simulate.sh" target="仿真软件" module="shell" desc="启动仿真模拟引擎"/>
+      <Command name="启动指显数据收发软件" script="/root/work/run_dataBridge.sh" target="指显数据收发软件" module="shell" desc="启动指显数据收发网桥" pairId="7"/>
+      <Command name="启动通信处理软件" script="/root/work/run_transmit.sh" target="通信处理软件" module="shell" desc="启动通信数据转发"/>
+    </Category>
+    <Category name="实用命令">
+      <Command name="服务器校时" script="/root/work/fix_ptp_route.sh" target="服务器校时" module="shell" desc="PTP/NTP 时间同步校准"/>
+      <Command name="清空DODS存盘数据" script="/root/work/deleteSourceData.sh" target="清空DODS存盘数据" module="shell" desc="清理 DODS 历史存储数据"/>
+      <Command name="命令下发成功测试" script="/root/work/command_executed_ok.sh" target="命令下发成功测试" module="shell" desc="测试指令响应与联通性"/>
+    </Category>
+  </Commands>
+</AnsiblePilotConfig>

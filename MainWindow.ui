@@ -350,6 +350,34 @@
              <number>8</number>
             </property>
             <item>
+             <layout class="QHBoxLayout" name="horizontalLayoutPresetProc">
+              <item>
+               <widget class="QLabel" name="labelPresetProc">
+                <property name="text">
+                 <string>预设进程与日志:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="presetProcCombo">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="applyPresetProcBtn">
+                <property name="text">
+                 <string>填入并设置Limit</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
              <layout class="QHBoxLayout" name="horizontalLayoutProc">
               <item>
                <widget class="QLabel" name="labelProc">
@@ -817,6 +845,34 @@
         <property name="bottomMargin">
          <number>12</number>
         </property>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayoutPresetCmd">
+          <item>
+           <widget class="QLabel" name="labelPresetCmd">
+            <property name="text">
+             <string>预设常用命令/脚本:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="presetCmdCombo">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="applyPresetCmdBtn">
+            <property name="text">
+             <string>填入命令与模块</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayoutCmdModule">
           <item>

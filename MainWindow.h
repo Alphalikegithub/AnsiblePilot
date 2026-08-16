@@ -4,12 +4,40 @@
 #include <QProcess>
 #include <QStringList>
 #include <QDateTime>
+#include <QList>
 
 namespace Ui {
 class MainWindow;
 }
 
 class QTimer;
+
+struct PairInfo {
+    int pairId = 0;
+    QString serviceName;
+    QString softwareName;
+    QString masterIp;
+    QString slaveIp;
+};
+
+struct ProcessPreset {
+    QString name;
+    QString keyword;
+    QString logPath;
+    int pairId = 0;
+    QString desc;
+    QString pidQuery;
+};
+
+struct CommandPreset {
+    QString category;
+    QString name;
+    QString script;
+    QString target;
+    QString module = QStringLiteral("shell");
+    QString desc;
+    int pairId = 0;
+};
 
 class MainWindow : public QMainWindow
 {
@@ -28,10 +56,16 @@ private slots:
     void exportLogs();
     void copyLogs();
 
+    void onPresetProcChanged(int index);
+    void applyPresetProc();
+    void onPresetCmdChanged(int index);
+    void applyPresetCmd();
+
 private:
     void setupUiStyles();
     void scanFiles();
     void updateInventoryGroups();
+    void loadClusterConfig();
     void runProcess(const QString &program, const QStringList &arguments, const QString &workingDirectory);
     void runInExternalTerminal(const QString &program, const QStringList &arguments, const QString &workingDirectory);
     void appendLog(const QString &message);
@@ -57,6 +91,10 @@ private:
 
     QProcess *process = nullptr;
     QTimer *externalLogTimer = nullptr;
+
+    QList<PairInfo> pairInfos;
+    QList<ProcessPreset> processPresets;
+    QList<CommandPreset> commandPresets;
 
     struct ExternalRun {
         QString logPath;

@@ -15,6 +15,7 @@
 #include <QTextCursor>
 #include <QTextStream>
 #include <QTimer>
+#include <QXmlStreamReader>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -47,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 默认工作空间
     ui->workDirEdit->setText(QDir::currentPath());
     scanFiles();
+    loadClusterConfig();
     updateInventoryGroups();
     updatePreview();
 
@@ -148,6 +150,8 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // 2. 常用操作 - 进程与日志
+    connect(ui->presetProcCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onPresetProcChanged);
+    connect(ui->applyPresetProcBtn, &QPushButton::clicked, this, &MainWindow::applyPresetProc);
     connect(ui->procKeywordEdit, &QLineEdit::textChanged, this, &MainWindow::updatePreview);
     connect(ui->logPathEdit, &QLineEdit::textChanged, this, &MainWindow::updatePreview);
     connect(ui->logLinesEdit, &QLineEdit::textChanged, this, &MainWindow::updatePreview);
@@ -259,6 +263,8 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // 4. 批量命令
+    connect(ui->presetCmdCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onPresetCmdChanged);
+    connect(ui->applyPresetCmdBtn, &QPushButton::clicked, this, &MainWindow::applyPresetCmd);
     connect(ui->moduleCombo, &QComboBox::currentTextChanged, this, &MainWindow::updatePreview);
     connect(ui->batchCmdEdit, &QPlainTextEdit::textChanged, this, &MainWindow::updatePreview);
     connect(ui->runBatchCmdBtn, &QPushButton::clicked, this, [this]() {
@@ -507,6 +513,8 @@ void MainWindow::scanFiles()
 
     int pbIdx = ui->playbookCombo->findText(oldPb);
     if (pbIdx >= 0) ui->playbookCombo->setCurrentIndex(pbIdx);
+
+    loadClusterConfig();
 }
 
 QString MainWindow::ansiToHtml(const QString &text) const
@@ -900,4 +908,218 @@ void MainWindow::pollExternalTerminalOutput()
             activeRuns.removeAt(i);
         }
     }
+}
+
+void MainWindow::loadClusterConfig()
+{
+    pairInfos.clear();
+    processPresets.clear();
+    commandPresets.clear();
+
+    const QString ws = workspace();
+    const QStringList candidatePaths = {
+        ws + QStringLiteral("/config/cluster_config.xml"),
+        ws + QStringLiteral("/cluster_config.xml"),
+        QDir::currentPath() + QStringLiteral("/config/cluster_config.xml"),
+        QDir::currentPath() + QStringLiteral("/cluster_config.xml"),
+        QCoreApplication::applicationDirPath() + QStringLiteral("/config/cluster_config.xml"),
+        QCoreApplication::applicationDirPath() + QStringLiteral("/../config/cluster_config.xml"),
+        QStringLiteral("config/cluster_config.xml")
+    };
+
+    QString configFile;
+    for (const QString &p : candidatePaths) {
+        if (QFile::exists(p)) {
+            configFile = p;
+            break;
+        }
+    }
+
+    if (!configFile.isEmpty()) {
+        appendLog(QStringLiteral("[配置系统] 已加载集群配置文件: %1\n").arg(configFile));
+        QFile file(configFile);
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QXmlStreamReader xml(&file);
+            QString currentCategory;
+
+            while (!xml.atEnd() && !xml.hasError()) {
+                xml.readNext();
+                if (xml.isStartElement()) {
+                    const QString tag = xml.name().toString();
+                    if (tag == QStringLiteral("PairIdInfo")) {
+                        PairInfo info;
+                        while (!(xml.isEndElement() && xml.name().toString() == QStringLiteral("PairIdInfo")) && !xml.atEnd()) {
+                            xml.readNext();
+                            if (xml.isStartElement()) {
+                                const QString subTag = xml.name().toString();
+                                const QString text = xml.readElementText();
+                                if (subTag == QStringLiteral("pairid")) info.pairId = text.toInt();
+                                else if (subTag == QStringLiteral("servicename")) info.serviceName = text;
+                                else if (subTag == QStringLiteral("softwarename")) info.softwareName = text;
+                                else if (subTag == QStringLiteral("masterIp")) info.masterIp = text;
+                                else if (subTag == QStringLiteral("slaveIp")) info.slaveIp = text;
+                            }
+                        }
+                        if (info.pairId > 0) pairInfos.append(info);
+                    } else if (tag == QStringLiteral("Process")) {
+                        const QXmlStreamAttributes attrs = xml.attributes();
+                        ProcessPreset proc;
+                        proc.name = attrs.value(QStringLiteral("name")).toString();
+                        proc.keyword = attrs.value(QStringLiteral("keyword")).toString();
+                        proc.logPath = attrs.value(QStringLiteral("logPath")).toString();
+                        proc.pairId = attrs.value(QStringLiteral("pairId")).toInt();
+                        proc.desc = attrs.value(QStringLiteral("desc")).toString();
+
+                        while (!(xml.isEndElement() && xml.name().toString() == QStringLiteral("Process")) && !xml.atEnd()) {
+                            xml.readNext();
+                            if (xml.isStartElement() && xml.name().toString() == QStringLiteral("pidQuery")) {
+                                proc.pidQuery = xml.readElementText();
+                            }
+                        }
+                        processPresets.append(proc);
+                    } else if (tag == QStringLiteral("Category")) {
+                        currentCategory = xml.attributes().value(QStringLiteral("name")).toString();
+                    } else if (tag == QStringLiteral("Command")) {
+                        const QXmlStreamAttributes attrs = xml.attributes();
+                        CommandPreset cmd;
+                        cmd.category = currentCategory.isEmpty() ? QStringLiteral("常用命令") : currentCategory;
+                        cmd.name = attrs.value(QStringLiteral("name")).toString();
+                        cmd.script = attrs.value(QStringLiteral("script")).toString();
+                        cmd.target = attrs.value(QStringLiteral("target")).toString();
+                        cmd.module = attrs.hasAttribute(QStringLiteral("module")) ? attrs.value(QStringLiteral("module")).toString() : QStringLiteral("shell");
+                        cmd.desc = attrs.value(QStringLiteral("desc")).toString();
+                        cmd.pairId = attrs.value(QStringLiteral("pairId")).toInt();
+                        commandPresets.append(cmd);
+                    }
+                }
+            }
+            file.close();
+        }
+    }
+
+    // 填充到「进程与日志」预设下拉列表
+    const bool procBlocked = ui->presetProcCombo->blockSignals(true);
+    ui->presetProcCombo->clear();
+    ui->presetProcCombo->addItem(QStringLiteral("-- 选择预设进程与日志 (自动填充) --"));
+    for (const auto &p : processPresets) {
+        QString pairText;
+        for (const auto &pair : pairInfos) {
+            if (pair.pairId == p.pairId) {
+                pairText = QStringLiteral("[热备%1: %2]").arg(QString::number(pair.pairId), pair.serviceName);
+                break;
+            }
+        }
+        if (pairText.isEmpty()) {
+            pairText = p.pairId > 0 ? QStringLiteral("[热备%1]").arg(p.pairId) : QStringLiteral("[通用]");
+        }
+        QString label = QStringLiteral("%1 %2 (进程: %3 | 日志: %4)").arg(pairText, p.name, p.keyword, p.logPath);
+        ui->presetProcCombo->addItem(label);
+    }
+    ui->presetProcCombo->blockSignals(procBlocked);
+
+    // 填充到「批量命令」预设下拉列表
+    const bool cmdBlocked = ui->presetCmdCombo->blockSignals(true);
+    ui->presetCmdCombo->clear();
+    ui->presetCmdCombo->addItem(QStringLiteral("-- 选择预设常用命令/启动脚本 (自动填充) --"));
+    for (const auto &c : commandPresets) {
+        QString pairText;
+        if (c.pairId > 0) {
+            for (const auto &pair : pairInfos) {
+                if (pair.pairId == c.pairId) {
+                    pairText = QStringLiteral(" [热备%1: %2]").arg(QString::number(pair.pairId), pair.serviceName);
+                    break;
+                }
+            }
+            if (pairText.isEmpty()) {
+                pairText = QStringLiteral(" [热备%1]").arg(c.pairId);
+            }
+        }
+        QString label = QStringLiteral("【%1】%2 (%3)%4").arg(c.category, c.name, c.script, pairText);
+        ui->presetCmdCombo->addItem(label);
+    }
+    ui->presetCmdCombo->blockSignals(cmdBlocked);
+}
+
+void MainWindow::onPresetProcChanged(int index)
+{
+    if (index <= 0 || index - 1 >= processPresets.size()) return;
+    const ProcessPreset &p = processPresets.at(index - 1);
+    ui->procKeywordEdit->setText(p.keyword);
+    ui->logPathEdit->setText(p.logPath);
+    updatePreview();
+}
+
+void MainWindow::applyPresetProc()
+{
+    int index = ui->presetProcCombo->currentIndex();
+    if (index <= 0) {
+        QMessageBox::information(this, QStringLiteral("提示"), QStringLiteral("请先在下拉列表中选择一个预设进程或日志项。"));
+        return;
+    }
+    const ProcessPreset &p = processPresets.at(index - 1);
+    ui->procKeywordEdit->setText(p.keyword);
+    ui->logPathEdit->setText(p.logPath);
+
+    // 如果对应了热备对，自动填入目标主机的 IP 到 Limit 框中
+    if (p.pairId > 0) {
+        for (const auto &pair : pairInfos) {
+            if (pair.pairId == p.pairId) {
+                QString targetLimit;
+                if (!pair.masterIp.isEmpty() && !pair.slaveIp.isEmpty()) {
+                    targetLimit = QStringLiteral("%1,%2").arg(pair.masterIp, pair.slaveIp);
+                } else if (!pair.masterIp.isEmpty()) {
+                    targetLimit = pair.masterIp;
+                }
+                if (!targetLimit.isEmpty()) {
+                    ui->limitEdit->setText(targetLimit);
+                    appendLog(QStringLiteral("[配置提示] 已设置目标热备对 Limit: %1 (%2)\n").arg(targetLimit, pair.serviceName));
+                }
+                break;
+            }
+        }
+    }
+    updatePreview();
+}
+
+void MainWindow::onPresetCmdChanged(int index)
+{
+    if (index <= 0 || index - 1 >= commandPresets.size()) return;
+    const CommandPreset &c = commandPresets.at(index - 1);
+    ui->batchCmdEdit->setPlainText(c.script);
+    int modIdx = ui->moduleCombo->findText(c.module);
+    if (modIdx >= 0) ui->moduleCombo->setCurrentIndex(modIdx);
+    updatePreview();
+}
+
+void MainWindow::applyPresetCmd()
+{
+    int index = ui->presetCmdCombo->currentIndex();
+    if (index <= 0) {
+        QMessageBox::information(this, QStringLiteral("提示"), QStringLiteral("请先在下拉列表中选择一个预设脚本或命令。"));
+        return;
+    }
+    const CommandPreset &c = commandPresets.at(index - 1);
+    ui->batchCmdEdit->setPlainText(c.script);
+    int modIdx = ui->moduleCombo->findText(c.module);
+    if (modIdx >= 0) ui->moduleCombo->setCurrentIndex(modIdx);
+
+    // 如果该命令对应了特定热备对，自动填入目标主机的 IP
+    if (c.pairId > 0) {
+        for (const auto &pair : pairInfos) {
+            if (pair.pairId == c.pairId) {
+                QString targetLimit;
+                if (!pair.masterIp.isEmpty() && !pair.slaveIp.isEmpty()) {
+                    targetLimit = QStringLiteral("%1,%2").arg(pair.masterIp, pair.slaveIp);
+                } else if (!pair.masterIp.isEmpty()) {
+                    targetLimit = pair.masterIp;
+                }
+                if (!targetLimit.isEmpty()) {
+                    ui->limitEdit->setText(targetLimit);
+                    appendLog(QStringLiteral("[配置提示] 已设置目标热备对 Limit: %1 (%2)\n").arg(targetLimit, pair.serviceName));
+                }
+                break;
+            }
+        }
+    }
+    updatePreview();
 }

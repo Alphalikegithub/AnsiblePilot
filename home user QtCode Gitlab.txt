@@ -1,0 +1,11 @@
+/home/user/QtCode/Gitlab/AnsiblePilot/MainWindow.cpp:1010: error: no match for ‘operator=’ (operand types are ‘QList<PairInfo>’ and ‘<brace-enclosed initializer list>’)
+ 1010 |         };
+      |         ^
+      
+      /home/user/QtCode/Gitlab/AnsiblePilot/MainWindow.cpp:1023: error: no match for ‘operator=’ (operand types are ‘QList<ProcessPreset>’ and ‘<brace-enclosed initializer list>’)
+ 1023 |         };
+      |         ^
+      
+      /home/user/QtCode/Gitlab/AnsiblePilot/MainWindow.cpp:1040: error: no match for ‘operator=’ (operand types are ‘QList<CommandPreset>’ and ‘<brace-enclosed initializer list>’)
+ 1040 |         };
+      |         ^

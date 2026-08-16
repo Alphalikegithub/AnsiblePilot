@@ -1,0 +1,15 @@
+[web]
+172.10.10.1 ansible_ssh_user=root
+172.10.10.2 ansible_ssh_user=root
+172.10.10.3 ansible_ssh_user=root
+172.10.10.4 ansible_ssh_user=root
+172.10.10.5 ansible_ssh_user=root
+172.10.10.6 ansible_ssh_user=root
+172.10.10.7 ansible_ssh_user=root
+172.10.10.8 ansible_ssh_user=root
+172.10.10.9 ansible_ssh_user=root
+172.10.10.10 ansible_ssh_user=root
+172.10.10.11 ansible_ssh_user=root
+172.10.10.12 ansible_ssh_user=root
+172.10.10.17 ansible_ssh_user=root
+172.10.10.18 ansible_ssh_user=root
