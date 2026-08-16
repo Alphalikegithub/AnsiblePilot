@@ -473,46 +473,123 @@ void MainWindow::scanFiles()
     const QDir dir(workspace());
     if (!dir.exists()) return;
 
-    const QString oldInv = ui->inventoryCombo->currentText();
-    const QString oldPb = ui->playbookCombo->currentText();
+    const QString oldInv = ui->inventoryCombo->currentText().trimmed();
+    const QString oldPb = ui->playbookCombo->currentText().trimmed();
+
+    const bool invBlocked = ui->inventoryCombo->blockSignals(true);
+    const bool pbBlocked = ui->playbookCombo->blockSignals(true);
 
     ui->inventoryCombo->clear();
     ui->playbookCombo->clear();
 
+    QStringList foundInventories;
+
+    // 1. 系统默认主机清单
+    if (QFile::exists(QStringLiteral("/etc/ansible/hosts"))) {
+        foundInventories.append(QStringLiteral("/etc/ansible/hosts"));
+    }
+
+    // 2. 动态扫描工作空间目录下所有匹配 hosts / inventory / *.ini / *.cfg 等文件
+    const QStringList invFilters = {
+        QStringLiteral("*hosts*"),
+        QStringLiteral("*inventory*"),
+        QStringLiteral("*.ini"),
+        QStringLiteral("*.cfg"),
+        QStringLiteral("*.yaml"),
+        QStringLiteral("*.yml")
+    };
+    const QStringList scannedFiles = dir.entryList(invFilters, QDir::Files | QDir::Readable, QDir::Name);
+    for (const QString &f : scannedFiles) {
+        // 过滤掉明显的非 inventory 文件
+        if (f.endsWith(QStringLiteral(".log")) || f.endsWith(QStringLiteral(".tmp")) || f == QStringLiteral("cluster_config.xml")) {
+            continue;
+        }
+        const QString fullPath = dir.filePath(f);
+        if (!foundInventories.contains(fullPath)) {
+            foundInventories.append(fullPath);
+        }
+    }
+
+    // 3. 常规候选补充
     const QStringList inventoryCandidates = {
+        QStringLiteral("my_hosts"),
         QStringLiteral("hosts"),
         QStringLiteral("inventory"),
-        QStringLiteral("inventory.ini"),
-        QStringLiteral("inventory.yaml"),
-        QStringLiteral("inventory.yml"),
-        QStringLiteral("my_hosts")
+        QStringLiteral("inventory.ini")
     };
-
-    if (QFile::exists(QStringLiteral("/etc/ansible/hosts"))) {
-        ui->inventoryCombo->addItem(QStringLiteral("/etc/ansible/hosts"));
-    }
-
     for (const QString &name : inventoryCandidates) {
-        if (dir.exists(name)) ui->inventoryCombo->addItem(dir.filePath(name));
+        const QString fullPath = dir.filePath(name);
+        if (dir.exists(name) && !foundInventories.contains(fullPath)) {
+            foundInventories.append(fullPath);
+        }
     }
 
+    // 如果之前选中的 inventory 存在但不在扫描列表中，保留并加入
+    if (!oldInv.isEmpty() && !foundInventories.contains(oldInv)) {
+        if (QFile::exists(oldInv)) {
+            foundInventories.append(oldInv);
+        }
+    }
+
+    if (foundInventories.isEmpty()) {
+        foundInventories.append(dir.filePath(QStringLiteral("my_hosts")));
+    }
+
+    for (const QString &invPath : foundInventories) {
+        ui->inventoryCombo->addItem(invPath);
+    }
+
+    // 4. 扫描 Playbook (*.yaml, *.yml)
     const QStringList pbEntries = dir.entryList(
         QStringList() << QStringLiteral("*.yaml") << QStringLiteral("*.yml"),
-        QDir::Files,
+        QDir::Files | QDir::Readable,
         QDir::Name
     );
+    QStringList foundPlaybooks;
     for (const QString &name : pbEntries) {
-        ui->playbookCombo->addItem(dir.filePath(name));
+        if (name != QStringLiteral("cluster_config.xml")) {
+            foundPlaybooks.append(dir.filePath(name));
+        }
     }
 
-    if (ui->inventoryCombo->count() == 0) ui->inventoryCombo->addItem(dir.filePath(QStringLiteral("my_hosts")));
-    if (ui->playbookCombo->count() == 0) ui->playbookCombo->addItem(dir.filePath(QStringLiteral("ansible.yaml")));
+    if (!oldPb.isEmpty() && !foundPlaybooks.contains(oldPb)) {
+        if (QFile::exists(oldPb)) {
+            foundPlaybooks.append(oldPb);
+        }
+    }
 
-    int invIdx = ui->inventoryCombo->findText(oldInv);
-    if (invIdx >= 0) ui->inventoryCombo->setCurrentIndex(invIdx);
+    if (foundPlaybooks.isEmpty()) {
+        foundPlaybooks.append(dir.filePath(QStringLiteral("ansible.yaml")));
+    }
 
-    int pbIdx = ui->playbookCombo->findText(oldPb);
-    if (pbIdx >= 0) ui->playbookCombo->setCurrentIndex(pbIdx);
+    for (const QString &pbPath : foundPlaybooks) {
+        ui->playbookCombo->addItem(pbPath);
+    }
+
+    // 5. 恢复之前选中的 Inventory，确保刷新扫描时不被覆盖重置
+    int invIdx = -1;
+    if (!oldInv.isEmpty()) {
+        invIdx = ui->inventoryCombo->findText(oldInv);
+    }
+    if (invIdx >= 0) {
+        ui->inventoryCombo->setCurrentIndex(invIdx);
+    } else if (ui->inventoryCombo->count() > 0) {
+        ui->inventoryCombo->setCurrentIndex(0);
+    }
+
+    // 6. 恢复之前选中的 Playbook
+    int pbIdx = -1;
+    if (!oldPb.isEmpty()) {
+        pbIdx = ui->playbookCombo->findText(oldPb);
+    }
+    if (pbIdx >= 0) {
+        ui->playbookCombo->setCurrentIndex(pbIdx);
+    } else if (ui->playbookCombo->count() > 0) {
+        ui->playbookCombo->setCurrentIndex(0);
+    }
+
+    ui->inventoryCombo->blockSignals(invBlocked);
+    ui->playbookCombo->blockSignals(pbBlocked);
 
     loadClusterConfig();
 }
@@ -1000,7 +1077,7 @@ void MainWindow::loadClusterConfig()
     // 填充到「进程与日志」预设下拉列表
     const bool procBlocked = ui->presetProcCombo->blockSignals(true);
     ui->presetProcCombo->clear();
-    ui->presetProcCombo->addItem(QStringLiteral("-- 选择预设进程与日志 (自动填充) --"));
+    ui->presetProcCombo->addItem(QStringLiteral("-- 自定义输入 (或选择预设快速填入) --"));
     for (const auto &p : processPresets) {
         QString pairText;
         for (const auto &pair : pairInfos) {
@@ -1020,7 +1097,7 @@ void MainWindow::loadClusterConfig()
     // 填充到「批量命令」预设下拉列表
     const bool cmdBlocked = ui->presetCmdCombo->blockSignals(true);
     ui->presetCmdCombo->clear();
-    ui->presetCmdCombo->addItem(QStringLiteral("-- 选择预设常用命令/启动脚本 (自动填充) --"));
+    ui->presetCmdCombo->addItem(QStringLiteral("-- 自定义输入 (或选择预设快速填入) --"));
     for (const auto &c : commandPresets) {
         QString pairText;
         if (c.pairId > 0) {
